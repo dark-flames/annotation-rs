@@ -1,6 +1,7 @@
 use super::symbol::*;
 use super::{helper::get_lit_str, DefaultValue, EnumItem, EnumValue, FieldType, Fields, Type};
 use proc_macro2::TokenStream;
+use quote::quote;
 use syn::{Data, DeriveInput, Error, Meta, NestedMeta};
 
 pub struct Attribute {

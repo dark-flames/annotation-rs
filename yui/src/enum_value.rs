@@ -1,7 +1,8 @@
 use super::helper::get_lit_str;
 use super::symbol::*;
 use heck::SnakeCase;
-use proc_macro::TokenStream;
+use proc_macro2::TokenStream;
+use quote::quote;
 use syn::{Data, DeriveInput, Error, Meta, NestedMeta, Variant};
 
 pub struct EnumItem {
@@ -16,7 +17,7 @@ impl EnumItem {
 
         if !input.attrs.is_empty() {
             for attr in input.attrs.iter() {
-                if name_value.path == ENUM_ITEM_VALUE {
+                if attr.path == ENUM_ITEM_VALUE {
                     match attr.parse_meta() {
                         Meta::List(list) => match list.nested.iter().first() {
                             NestedMeta::Lit(lit) => value = get_lit_str(&lit, &attr.path)?,
@@ -86,7 +87,7 @@ impl EnumValue {
             impl yui::traits::ValueEnum #enum_name {
                 fn from_str(value: &str) -> Result<Self, Self::Err> {
                     match value {
-                        #(#arm),*
+                        #(#arms),*
                         others => Err(
                             syn::Error::new_spanned(
                                 lit,

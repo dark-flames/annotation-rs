@@ -1,7 +1,7 @@
 use super::symbol::*;
 use super::{helper::get_lit_bool, helper::get_lit_str, DefaultValue, FieldType};
 use proc_macro2::TokenStream;
-use quote;
+use quote::quote;
 use std::collections::HashMap;
 use syn::{Error, Field as SynField, Fields as SynFields, Meta, NestedMeta, Path};
 

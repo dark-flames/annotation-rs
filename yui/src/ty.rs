@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote;
+use quote::quote;
 use std::fmt;
 use syn::{Error, Path, Type as SynType, TypePath};
 
@@ -130,57 +130,57 @@ impl Type {
 
     pub fn get_nested_pattern(&self, named: bool) -> Result<TokenStream, Error> {
         match (self, named) {
-            (Type::String, true) => OK(quote! {
+            (Type::String, true) => Ok(quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::NameValue(meta_value)
                 )
             }),
-            (Type::String, false) => OK(quote! {
+            (Type::String, false) => Ok(quote! {
                 syn::NestedMeta::Lit(lit)
             }),
-            (Type::Bool, true) => OK(quote! {
+            (Type::Bool, true) => Ok(quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::NameValue(meta_value)
                 )
             }),
-            (Type::Bool, false) => OK(quote! {
+            (Type::Bool, false) => Ok(quote! {
                 syn::NestedMeta::Lit(lit)
             }),
-            (Type::Integer(_), true) => OK(quote! {
+            (Type::Integer(_), true) => Ok(quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::NameValue(meta_value)
                 )
             }),
-            (Type::Integer(_), false) => OK(quote! {
+            (Type::Integer(_), false) => Ok(quote! {
                 syn::NestedMeta::Lit(lit)
             }),
-            (Type::Float(_), true) => OK(quote! {
+            (Type::Float(_), true) => Ok(quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::NameValue(meta_value)
                 )
             }),
-            (Type::Float(_), false) => OK(quote! {
+            (Type::Float(_), false) => Ok(quote! {
                 syn::NestedMeta::Lit(lit)
             }),
-            (Type::Object(_), true) => OK(quote! {
+            (Type::Object(_), true) => Ok(quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::List(meta_value)
                 )
             }),
-            (Type::Enum(_), true) => OK(quote! {
+            (Type::Enum(_), true) => Ok(quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::NameValue(meta_value)
                 )
             }),
-            (Type::Enum(_), false) => OK(quote! {
+            (Type::Enum(_), false) => Ok(quote! {
                 syn::NestedMeta::Lit(lit)
             }),
-            (Type::List(_), true) => OK(quote! {
+            (Type::List(_), true) => Ok(quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::List(meta_value)
                 )
             }),
-            (Type::Map(_), true) => OK(quote! {
+            (Type::Map(_), true) => Ok(quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::List(meta_value)
                 )
