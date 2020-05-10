@@ -33,3 +33,10 @@ impl Display for Symbol {
         formatter.write_str(self.0)
     }
 }
+
+pub const ATTRIBUTE: Symbol = Symbol("attribute");
+pub const ATTRIBUTE_FIELD: Symbol = Symbol("attribute_field");
+pub const ATTRIBUTE_FIELD_PATH: Symbol = Symbol("path");
+pub const ATTRIBUTE_FIELD_ENUM_VALUE: Symbol = Symbol("enum_value");
+pub const ATTRIBUTE_FIELD_DEFAULT: Symbol = Symbol("default");
+pub const ENUM_ITEM_VALUE: Symbol = Symbol("enum_item_value");

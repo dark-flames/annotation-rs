@@ -1,7 +1,9 @@
 use std::error::Error as StdError;
 use std::fmt::{Display, Formatter, Result};
+use syn::token::Token;
+use syn::Error as SynError;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Error {
     pub message: &'static str,
 }
@@ -11,8 +13,8 @@ impl Error {
         Error { message }
     }
 
-    pub fn from_syn_error(error: syn::Error) -> Self {
-        Self::new(error.to_string().as_str())
+    pub fn from_syn_error<T: Token, D: Display>(token: T, message: D) -> Self {
+        Self::new(SynError::new_spanned(token, message).to_string().as_str())
     }
 }
 
