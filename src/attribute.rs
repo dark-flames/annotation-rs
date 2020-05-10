@@ -1,5 +1,5 @@
 use super::symbol::*;
-use super::{get_lit_str, DefaultValue, EnumItem, EnumValue, FieldType, Fields, Type};
+use super::{helper::get_lit_str, DefaultValue, EnumItem, EnumValue, FieldType, Fields, Type};
 use proc_macro2::TokenStream;
 use syn::{Data, DeriveInput, Error, Meta, NestedMeta};
 
@@ -21,12 +21,12 @@ impl Attribute {
                             path = match attr.parse_meta() {
                                 Meta::List(list) => match list.nested.iter().first() {
                                     NestedMeta::Lit(lit) => path = get_lit_str(&lit, &attr.path)?,
-                                    _ => Err(Error::from_syn_error(
+                                    _ => Err(Error::new_spanned(
                                         attr,
                                         "Meta of Attribute must be Lit List",
                                     )),
                                 },
-                                meta => Err(Error::from_syn_error(&meta, "Unexpected attribute")),
+                                meta => Err(Error::new_spanned(&meta, "Unexpected attribute")),
                             }?
                         }
                     }
@@ -38,7 +38,7 @@ impl Attribute {
                     fields: Fields::from_ast(&data_struct.fields)?,
                 })
             }
-            _ => Err(Error::from_syn_error(&input, "Attribute must be a struct")),
+            _ => Err(Error::new_spanned(&input, "Attribute must be a struct")),
         }
     }
 
@@ -50,13 +50,13 @@ impl Attribute {
 
         quote! {
             impl Parse for #name {
-                pub fn get_path() -> yukino_attribute_reader::Symbol {
-                    return yukino_attribute_reader::Symbol(#path);
+                pub fn get_path() -> yui::Symbol {
+                    return yui::Symbol(#path);
                 }
 
                 pub fn from_meta_list(
                     input: &syn::MetaList
-                ) -> Result<Self, yukino_attribute_reader::Error> {
+                ) -> Result<Self, syn::Error> {
                     #parse
 
                     Ok(#name #construct)

@@ -1,6 +1,6 @@
-use crate::{get_lit_str, Error, Symbol};
+use crate::{helper::get_lit_str, Symbol};
 use std::str::FromStr;
-use syn::{Attribute, Lit, Path};
+use syn::{Attribute, Error, Lit, Path};
 
 pub trait ValueEnum: FromStr {
     type Err = Error;

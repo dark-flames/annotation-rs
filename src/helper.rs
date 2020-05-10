@@ -1,7 +1,6 @@
-use super::error::Error;
 use syn::punctuated::Punctuated;
 use syn::{
-    Error as SynError, GenericArgument, Lit, MetaList, NestedMeta, Path, PathArguments,
+    Error as SynError, Error, GenericArgument, Lit, MetaList, NestedMeta, Path, PathArguments,
     PathSegment, Type, TypePath,
 };
 
@@ -29,7 +28,7 @@ pub fn unwrap_punctuated_last<T, P>(
 
 #[inline]
 pub fn get_nested_type(segment: &PathSegment, message: &str) -> Result<&Type, Error> {
-    let error = Error::from_syn_error(segment, message);
+    let error = Error::new_spanned(segment, message);
     match &segment.arguments {
         PathArguments::AngleBracketed(argument) => {
             match unwrap_punctuated_first(&argument.args, error)? {
@@ -45,7 +44,7 @@ pub fn get_nested_type(segment: &PathSegment, message: &str) -> Result<&Type, Er
 pub fn unwrap_type_path(ty: &Type, message: &str) -> Result<&TypePath, Error> {
     match ty {
         Type::Path(type_path) => Ok(type_path),
-        _ => Err(Error::from_syn_error(ty, message)),
+        _ => Err(Error::new_spanned(ty, message)),
     }
 }
 
@@ -53,7 +52,7 @@ pub fn unwrap_type_path(ty: &Type, message: &str) -> Result<&TypePath, Error> {
 pub fn get_lit_str(lit: &Lit, path: &Path) -> Result<String, Error> {
     match lit {
         Lit::Str(lit_str) => Ok(lit_str.value()),
-        _ => Err(Error::from_syn_error(
+        _ => Err(Error::new_spanned(
             lit,
             format!("expected {} attribute to be a string", path),
         )),
@@ -64,7 +63,7 @@ pub fn get_lit_str(lit: &Lit, path: &Path) -> Result<String, Error> {
 pub fn get_lit_int<T>(lit: &Lit, path: &Path) -> Result<T, Error> {
     match lit {
         Lit::Int(lit_int) => Ok(lit_int.base10_parse::<T>()),
-        _ => Err(Error::from_syn_error(
+        _ => Err(Error::new_spanned(
             lit,
             format!("expected {} attribute to be a integer", path),
         )),
@@ -75,7 +74,7 @@ pub fn get_lit_int<T>(lit: &Lit, path: &Path) -> Result<T, Error> {
 pub fn get_lit_int_str(lit: &Lit, path: &Path) -> Result<String, Error> {
     match lit {
         Lit::Int(lit_int) => Ok(lit_int.to_string()),
-        _ => Err(Error::from_syn_error(
+        _ => Err(Error::new_spanned(
             lit,
             format!("expected {} attribute to be a integer", path),
         )),
@@ -86,7 +85,7 @@ pub fn get_lit_int_str(lit: &Lit, path: &Path) -> Result<String, Error> {
 pub fn get_lit_float<T>(lit: &Lit, path: &Path) -> Result<T, Error> {
     match lit {
         Lit::Float(lit_float) => Ok(lit_float.base10_parse::<T>()()),
-        _ => Err(Error::from_syn_error(
+        _ => Err(Error::new_spanned(
             lit,
             format!("expected {} attribute to be a float", path),
         )),
@@ -97,7 +96,7 @@ pub fn get_lit_float<T>(lit: &Lit, path: &Path) -> Result<T, Error> {
 pub fn get_lit_float_str(lit: &Lit, path: &Path) -> Result<String, Error> {
     match lit {
         Lit::Float(lit_float) => Ok(lit_float.to_string()),
-        _ => Err(Error::from_syn_error(
+        _ => Err(Error::new_spanned(
             lit,
             format!("expected {} attribute to be a float", path),
         )),
@@ -119,7 +118,7 @@ pub fn get_lit_bool(lit: &Lit, path: &Path) -> Result<bool, Error> {
 pub fn get_lit_bool_str(lit: &Lit, path: &Path) -> Result<String, Error> {
     match lit {
         Lit::Bool(lit_bool) => Ok(lit_bool.to_string()),
-        _ => Err(Error::from_syn_error(
+        _ => Err(Error::new_spanned(
             lit,
             format!("expected {} attribute to be a bool", path),
         )),

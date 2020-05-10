@@ -1,13 +1,12 @@
 use proc_macro2::TokenStream;
 use quote;
 use std::fmt;
-use syn::{Path, Type as SynType, TypePath};
+use syn::{Error, Path, Type as SynType, TypePath};
 
 use super::helper::{
     get_lit_bool_str, get_lit_float_str, get_lit_int_str, get_nested_type, unwrap_punctuated_first,
     unwrap_punctuated_last, unwrap_type_path,
 };
-use super::Error;
 use super::{get_lit_float, get_lit_int, get_lit_str};
 
 pub enum Type {
@@ -25,7 +24,7 @@ impl Type {
     fn get_list_nested_type(type_path: &TypePath, is_enum: bool) -> Result<Type, Error> {
         let path_segment = unwrap_punctuated_first(
             &type_path.path.segments,
-            Error::from_syn_error(&type_path, "Unexpected type path segment"),
+            Error::new_spanned(&type_path, "Unexpected type path segment"),
         )?;
 
         let nested_type = get_nested_type(path_segment, "Unexpected type path Argument")?;
@@ -42,7 +41,7 @@ impl Type {
                         | Type::Enum(_) => true,
                         _ => false,
                     } {
-                        ty = Err(Error::from_syn_error(
+                        ty = Err(Error::new_spanned(
                             type_path,
                             "Nested type in Vec can not be Object, Vec or Map, because these can not create from lit"
                         ))
@@ -50,19 +49,19 @@ impl Type {
                 }
                 ty
             }
-            _ => Error::from_syn_error(type_path, "Nested type must be type path"),
+            _ => Error::new_spanned(type_path, "Nested type must be type path"),
         }
     }
 
     fn get_map_nested_type(type_path: &TypePath, is_enum: bool) -> Result<Type, Error> {
         let path_last_segment = unwrap_punctuated_last(
             &type_path.path.segments,
-            Error::from_syn_error(&type_path, "Unexpected type path segment"),
+            Error::new_spanned(&type_path, "Unexpected type path segment"),
         )?;
 
         let path_first_segment = unwrap_punctuated_first(
             &type_path.path.segments,
-            Error::from_syn_error(&type_path, "Unexpected type path segment"),
+            Error::new_spanned(&type_path, "Unexpected type path segment"),
         )?;
 
         let nested_type = get_nested_type(path_last_segment, "Unexpected type path Argument")?;
@@ -74,14 +73,14 @@ impl Type {
             SynType::Reference(reference) => match *reference.elem {
                 SynType::Path(first_type_path) => unwrap_punctuated_last(
                     &first_type_path.path.segments,
-                    Error::from_syn_error(&type_path, "Unexpected type path segment"),
+                    Error::new_spanned(&type_path, "Unexpected type path segment"),
                 ),
-                _ => Err(Error::from_syn_error(
+                _ => Err(Error::new_spanned(
                     type_path,
                     "Nested type must be type path",
                 )),
             },
-            _ => Err(Error::from_syn_error(
+            _ => Err(Error::new_spanned(
                 type_path,
                 "First nested type of HasMap must be &str",
             )),
@@ -89,7 +88,7 @@ impl Type {
         .ident;
 
         if first_type_ident != String::from("str") {
-            return Err(Error::from_syn_error(
+            return Err(Error::new_spanned(
                 type_path,
                 "First nested type of HasMap must be &str",
             ));
@@ -97,7 +96,7 @@ impl Type {
 
         match nested_type {
             SynType::Path(type_path) => Type::from_ast(type_path, is_enum),
-            _ => Err(Error::from_syn_error(
+            _ => Err(Error::new_spanned(
                 type_path,
                 "Nested type must be type path",
             )),
@@ -107,7 +106,7 @@ impl Type {
     pub fn from_ast(type_path: &TypePath, is_enum: bool) -> Result<Self, Error> {
         let segment = unwrap_punctuated_first(
             &type_path.path.segments,
-            Error::from_syn_error(type_path, "Unexpected type path segment"),
+            Error::new_spanned(type_path, "Unexpected type path segment"),
         )?;
 
         let token = segment.ident.to_string().as_str();
@@ -125,7 +124,7 @@ impl Type {
                 true => Type::Enum(String::from(type_name)),
                 false => Type::Object(String::from(type_name)),
             }),
-            _ => Err(Error::from_syn_error(type_path, "Unexpected type token")),
+            _ => Err(Error::new_spanned(type_path, "Unexpected type token")),
         }
     }
 
@@ -186,28 +185,28 @@ impl Type {
                     syn::Meta::List(meta_value)
                 )
             }),
-            _ => Err(Error::new("Invalid field type and named")),
+            _ => panic!("Invalid field type and named"),
         }
     }
 
     pub fn get_lit_reader_token_stream(&self, lit: &str, path: &str, item: &str) -> TokenStream {
         match self {
             Type::String => quote! {
-                yukino_attribute_reader::get_lit_str(#lit, #path)
+                yui::get_lit_str(#lit, #path)
             },
             Type::Bool => quote! {
-                yukino_attribute_reader::get_lit_bool(#lit, #path)
+                yui::get_lit_bool(#lit, #path)
             },
             Type::Integer(ty) => {
                 let result_type = ty.as_str();
                 quote! {
-                    yukino_attribute_reader::get_lit_int::<#result_type>(#lit, #path)
+                    yui::get_lit_int::<#result_type>(#lit, #path)
                 }
             }
             Type::Float(ty) => {
                 let result_type = ty.as_str();
                 quote! {
-                    yukino_attribute_reader::get_lit_float::<#result_type>(#lit, #path)
+                    yui::get_lit_float::<#result_type>(#lit, #path)
                 }
             }
             Type::Object(ty) => {
@@ -229,7 +228,7 @@ impl Type {
                     meta_value.nested.iter().map(|meta_nested_meta| {
                         match &meta_nested_meta {
                             #parttern => #reader,
-                            _ => Err(yukino_attribute_reader::Error::from_syn_error(
+                            _ => Err(syn::Error::new_spanned(
                                 meta_nested_meta,
                                 "Only support List of Lit"
                             ))
@@ -251,7 +250,7 @@ impl Type {
                             #parttern => {
                                 OK((format!("{}", &meta_value.path.ident).as_str, #reader?))
                             },
-                            _ => Err(yukino_attribute_reader::Error::from_syn_error(
+                            _ => Err(syn::Error::new_spanned(
                                 meta_nested_meta,
                                 "Only support List of Lit"
                             ))
@@ -269,10 +268,10 @@ impl fmt::Display for Type {
         match self {
             Type::String => write!(f, "String"),
             Type::Bool => write!(f, "bool"),
-            Type::Integer(ty) => write!(f, ty),
-            Type::Float(ty) => write!(f, ty),
-            Type::Object(ty) => write!(f, ty),
-            Type::Enum(ty) => write!(f, ty),
+            Type::Integer(ty) => write!(f, "{}", ty),
+            Type::Float(ty) => write!(f, "{}", ty),
+            Type::Object(ty) => write!(f, "{}", ty),
+            Type::Enum(ty) => write!(f, "{}", ty),
             Type::List(ty) => write!(f, "Vec<{}>", ty),
             Type::Map(ty) => write!(f, "Map<&str, {}>", ty),
         }
@@ -304,7 +303,7 @@ impl FieldType {
 
         let segment = unwrap_punctuated_first(
             &type_path.path.segments,
-            Error::from_syn_error(type_path, "Unexpected type path segment"),
+            Error::new_spanned(type_path, "Unexpected type path segment"),
         )?;
 
         match segment.ident.to_string().as_str() {
@@ -342,7 +341,7 @@ impl DefaultValue {
             Type::Integer(_) => Ok(DefaultValue::Integer(get_lit_int_str(lit, path)?)),
             Type::Float(_) => Ok(DefaultValue::Float(get_lit_float_str(lit, path)?)),
             Type::Enum(_) => Ok(DefaultValue::Enum(get_lit_str(lit, path)?)),
-            _ => Err(Error::from_syn_error(
+            _ => Err(Error::new_spanned(
                 lit,
                 "Only support default value on String / Bool / Integer / Float / Enum",
             )),
