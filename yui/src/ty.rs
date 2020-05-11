@@ -1,13 +1,11 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::fmt;
-use syn::{Error, Path, Type as SynType, TypePath};
+use syn::{Error, Field, Type as SynType, TypePath};
 
 use super::helper::{
-    get_lit_bool_str, get_lit_float_str, get_lit_int_str, get_nested_type, unwrap_punctuated_first,
-    unwrap_punctuated_last, unwrap_type_path,
+    get_nested_type, unwrap_punctuated_first, unwrap_punctuated_last, unwrap_type_path,
 };
-use super::{get_lit_float, get_lit_int, get_lit_str};
 
 pub enum Type {
     String,
@@ -16,8 +14,8 @@ pub enum Type {
     Float(String),
     Object(String),
     Enum(String),
-    List(Type),
-    Map(Type),
+    List(Box<Type>),
+    Map(Box<Type>),
 }
 
 impl Type {
@@ -31,25 +29,23 @@ impl Type {
 
         match nested_type {
             SynType::Path(type_path) => {
-                let mut ty = Type::from_ast(type_path, is_enum);
-                if ty.is_ok() {
-                    if !match ty.unwrap() {
-                        Type::String
-                        | Type::Bool
-                        | Type::Integer(_)
-                        | Type::Float(_)
-                        | Type::Enum(_) => true,
-                        _ => false,
-                    } {
-                        ty = Err(Error::new_spanned(
-                            type_path,
-                            "Nested type in Vec can not be Object, Vec or Map, because these can not create from lit"
-                        ))
-                    }
+                let ty = Type::from_ast(type_path, is_enum)?;
+                match &ty {
+                    Type::String
+                    | Type::Bool
+                    | Type::Integer(_)
+                    | Type::Float(_)
+                    | Type::Enum(_) => Ok(ty),
+                    _ => Err(Error::new_spanned(
+                        type_path,
+                        "Nested type in Vec can not be Object, Vec or Map, because these can not create from lit"
+                    ))
                 }
-                ty
             }
-            _ => Error::new_spanned(type_path, "Nested type must be type path"),
+            _ => Err(Error::new_spanned(
+                type_path,
+                "Nested type must be type path",
+            )),
         }
     }
 
@@ -70,7 +66,7 @@ impl Type {
             get_nested_type(path_first_segment, "Unexpected type path Argument")?;
 
         let first_type_ident = &match first_nested_type {
-            SynType::Reference(reference) => match *reference.elem {
+            SynType::Reference(reference) => match &*reference.elem {
                 SynType::Path(first_type_path) => unwrap_punctuated_last(
                     &first_type_path.path.segments,
                     Error::new_spanned(&type_path, "Unexpected type path segment"),
@@ -87,7 +83,7 @@ impl Type {
         }?
         .ident;
 
-        if first_type_ident != String::from("str") {
+        if first_type_ident.to_string() != String::from("str") {
             return Err(Error::new_spanned(
                 type_path,
                 "First nested type of HasMap must be &str",
@@ -109,17 +105,21 @@ impl Type {
             Error::new_spanned(type_path, "Unexpected type path segment"),
         )?;
 
-        let token = segment.ident.to_string().as_str();
+        let token = segment.ident.to_string().clone();
 
-        match token {
+        match token.as_str() {
             "String" => Ok(Type::String),
             "bool" => Ok(Type::Bool),
             "u8" | "u16" | "u32" | "u64" | "u128" | "i8" | "i16" | "i32" | "i64" | "i128" => {
-                Ok(Type::Integer(String::from(token)))
+                Ok(Type::Integer(token))
             }
-            "f32" | "f64" => Ok(Type::Float(String::from(token))),
-            "Vec" => Ok(Type::List(Self::get_list_nested_type(type_path, is_enum)?)),
-            "HashMap" => Ok(Type::Map(Self::get_map_nested_type(type_path, is_enum)?)),
+            "f32" | "f64" => Ok(Type::Float(token)),
+            "Vec" => Ok(Type::List(Box::new(Self::get_list_nested_type(
+                type_path, is_enum,
+            )?))),
+            "HashMap" => Ok(Type::Map(Box::new(Self::get_map_nested_type(
+                type_path, is_enum,
+            )?))),
             type_name if type_name.chars().next().unwrap().is_uppercase() => Ok(match is_enum {
                 true => Type::Enum(String::from(type_name)),
                 false => Type::Object(String::from(type_name)),
@@ -128,64 +128,64 @@ impl Type {
         }
     }
 
-    pub fn get_nested_pattern(&self, named: bool) -> Result<TokenStream, Error> {
+    pub fn get_nested_pattern(&self, named: bool) -> TokenStream {
         match (self, named) {
-            (Type::String, true) => Ok(quote! {
+            (Type::String, true) => quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::NameValue(meta_value)
                 )
-            }),
-            (Type::String, false) => Ok(quote! {
+            },
+            (Type::String, false) => quote! {
                 syn::NestedMeta::Lit(lit)
-            }),
-            (Type::Bool, true) => Ok(quote! {
+            },
+            (Type::Bool, true) => quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::NameValue(meta_value)
                 )
-            }),
-            (Type::Bool, false) => Ok(quote! {
+            },
+            (Type::Bool, false) => quote! {
                 syn::NestedMeta::Lit(lit)
-            }),
-            (Type::Integer(_), true) => Ok(quote! {
+            },
+            (Type::Integer(_), true) => quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::NameValue(meta_value)
                 )
-            }),
-            (Type::Integer(_), false) => Ok(quote! {
+            },
+            (Type::Integer(_), false) => quote! {
                 syn::NestedMeta::Lit(lit)
-            }),
-            (Type::Float(_), true) => Ok(quote! {
+            },
+            (Type::Float(_), true) => quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::NameValue(meta_value)
                 )
-            }),
-            (Type::Float(_), false) => Ok(quote! {
+            },
+            (Type::Float(_), false) => quote! {
                 syn::NestedMeta::Lit(lit)
-            }),
-            (Type::Object(_), true) => Ok(quote! {
+            },
+            (Type::Object(_), true) => quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::List(meta_value)
                 )
-            }),
-            (Type::Enum(_), true) => Ok(quote! {
+            },
+            (Type::Enum(_), true) => quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::NameValue(meta_value)
                 )
-            }),
-            (Type::Enum(_), false) => Ok(quote! {
+            },
+            (Type::Enum(_), false) => quote! {
                 syn::NestedMeta::Lit(lit)
-            }),
-            (Type::List(_), true) => Ok(quote! {
+            },
+            (Type::List(_), true) => quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::List(meta_value)
                 )
-            }),
-            (Type::Map(_), true) => Ok(quote! {
+            },
+            (Type::Map(_), true) => quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::List(meta_value)
                 )
-            }),
-            _ => panic!("Invalid field type and named"),
+            },
+            _ => unreachable!(),
         }
     }
 
@@ -227,7 +227,7 @@ impl Type {
                 quote! {
                     meta_value.nested.iter().map(|meta_nested_meta| {
                         match &meta_nested_meta {
-                            #parttern => #reader,
+                            #pattern => #reader,
                             _ => Err(syn::Error::new_spanned(
                                 meta_nested_meta,
                                 "Only support List of Lit"
@@ -237,7 +237,8 @@ impl Type {
                 }
             }
             Type::Map(ty) => {
-                let result_type = ty.to_string().as_str();
+                let result_type_string = ty.to_string();
+                let result_type = result_type_string.as_str();
                 let pattern = ty.get_nested_pattern(true);
                 let reader = ty.get_lit_reader_token_stream(
                     "&meta_value.lit",
@@ -247,7 +248,7 @@ impl Type {
                 quote! {
                     Ok(meta_value.nested.iter().map(|meta_nested_meta| {
                         match &meta_nested_meta {
-                            #parttern => {
+                            #pattern => {
                                 OK((format!("{}", &meta_value.path.ident).as_str, #reader?))
                             },
                             _ => Err(syn::Error::new_spanned(
@@ -313,12 +314,12 @@ impl FieldType {
                 let nested_type_path =
                     unwrap_type_path(nested_type, "Type in Option must be TypePath")?;
 
-                OK(FieldType::OptionalField(Type::from_ast(
+                Ok(FieldType::OptionalField(Type::from_ast(
                     nested_type_path,
                     is_enum,
                 )?))
             }
-            _ => OK(FieldType::RequiredField(Type::from_ast(
+            _ => Ok(FieldType::RequiredField(Type::from_ast(
                 type_path, is_enum,
             )?)),
         }
@@ -334,13 +335,13 @@ pub enum DefaultValue {
 }
 
 impl DefaultValue {
-    pub fn from_lit(lit: &Lit, path: &Path, ty: &Type) -> Result<Self, Error> {
-        match field_type {
-            Type::String => Ok(DefaultValue::String(get_lit_str(lit, path)?)),
-            Type::Bool => Ok(DefaultValue::Bool(get_lit_bool_str(lit, path)?)),
-            Type::Integer(_) => Ok(DefaultValue::Integer(get_lit_int_str(lit, path)?)),
-            Type::Float(_) => Ok(DefaultValue::Float(get_lit_float_str(lit, path)?)),
-            Type::Enum(_) => Ok(DefaultValue::Enum(get_lit_str(lit, path)?)),
+    pub fn from_string(value: String, lit: &Field, ty: &Type) -> Result<Self, Error> {
+        match ty {
+            Type::String => Ok(DefaultValue::String(value)),
+            Type::Bool => Ok(DefaultValue::Bool(value)),
+            Type::Integer(_) => Ok(DefaultValue::Integer(value)),
+            Type::Float(_) => Ok(DefaultValue::Float(value)),
+            Type::Enum(_) => Ok(DefaultValue::Enum(value)),
             _ => Err(Error::new_spanned(
                 lit,
                 "Only support default value on String / Bool / Integer / Float / Enum",

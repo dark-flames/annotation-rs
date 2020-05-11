@@ -1,35 +1,54 @@
 use super::symbol::*;
 use super::{helper::get_lit_bool, helper::get_lit_str, DefaultValue, FieldType};
+use crate::helper::get_lit_as_string;
 use proc_macro2::TokenStream;
 use quote::quote;
-use std::collections::HashMap;
-use syn::{Error, Field as SynField, Fields as SynFields, Meta, NestedMeta, Path};
+use syn::{
+    Attribute as SynAttribute, Error, Field as SynField, Fields as SynFields, Meta, NestedMeta,
+};
+
+struct FieldAttribute {
+    pub path: Option<String>,
+    pub eum_value: Option<bool>,
+    pub default: Option<String>,
+}
 
 trait ValuedField {
-    fn get_attributes(attrs: &Vec<SynAttribute>) -> Result<HashMap<&str, (&Lit, &Path)>, Error> {
-        let mut map = HashMap::new();
+    fn get_attribute(attrs: &Vec<SynAttribute>) -> Result<FieldAttribute, Error> {
+        let mut attribute = FieldAttribute {
+            path: None,
+            eum_value: None,
+            default: None,
+        };
         for attr in attrs.iter() {
             if attr.path == ATTRIBUTE_FIELD {
-                match &attr.parse_meta() {
+                match &attr.parse_meta()? {
                     Meta::List(list) => {
                         for nested_item in &list.nested {
                             match nested_item {
                                 NestedMeta::Meta(Meta::NameValue(path))
                                     if (path.path == ATTRIBUTE_FIELD_PATH) =>
                                 {
-                                    map.insert("path", (&path.lit, &path.path))
+                                    attribute.path = Some(get_lit_str(&path.lit, &path.path)?);
                                 }
                                 NestedMeta::Meta(Meta::NameValue(enum_value))
                                     if (enum_value.path == ATTRIBUTE_FIELD_ENUM_VALUE) =>
                                 {
-                                    map.insert("enum_value", (&enum_value.lit, &enum_value.path))
+                                    attribute.eum_value =
+                                        Some(get_lit_bool(&enum_value.lit, &enum_value.path)?);
                                 }
                                 NestedMeta::Meta(Meta::NameValue(default))
                                     if (default.path == ATTRIBUTE_FIELD_DEFAULT) =>
                                 {
-                                    map.insert("enum_value", (&default.lit, &default.path))
+                                    attribute.default =
+                                        Some(get_lit_as_string(&default.lit, &default.path)?);
                                 }
-                                _ => Err(Error::new_spanned(nested_item, "Unexpected nested meta")),
+                                _ => {
+                                    return Err(Error::new_spanned(
+                                        nested_item,
+                                        "Unexpected nested meta",
+                                    ));
+                                }
                             }
                         }
                     }
@@ -37,28 +56,28 @@ trait ValuedField {
                         return Err(Error::new_spanned(
                             attr,
                             "The meta of attribute_field must be a List",
-                        ))
+                        ));
                     }
                 }
             }
         }
 
-        Ok(map)
+        Ok(attribute)
     }
 
-    fn get_temp_var_name(&self) -> &str;
+    fn get_temp_var_name(&self) -> String;
 
-    fn field_nested_type(&self) -> &str;
+    fn field_nested_type(&self) -> String;
 
-    fn get_default(&self) -> Option<&DefaultValue>;
+    fn get_default(&self) -> &Option<DefaultValue>;
 
     fn get_temp_var_token_stream(&self) -> TokenStream {
         let temp_var_name = self.get_temp_var_name();
         let field_nested_type = self.field_nested_type();
         let default_token = match self.get_default() {
             Some(value) => {
-                let value_str = value.to_string().as_str();
-                quote! {#value_str.parse()?}
+                let value_string = value.to_string();
+                quote! {#value_string.parse()?}
             }
             None => quote! {None},
         };
@@ -80,12 +99,12 @@ pub struct NamedField {
 }
 
 impl ValuedField for NamedField {
-    fn get_temp_var_name(&self) -> &str {
-        format!("temp_{}", self.name).as_str()
+    fn get_temp_var_name(&self) -> String {
+        format!("temp_{}", self.name)
     }
 
-    fn field_nested_type(&self) -> &str {
-        self.field_type.unwrap().to_string().as_str()
+    fn field_nested_type(&self) -> String {
+        self.field_type.unwrap().to_string()
     }
 
     fn get_default(&self) -> &Option<DefaultValue> {
@@ -95,7 +114,7 @@ impl ValuedField for NamedField {
     fn get_parse_token_stream(&self) -> TokenStream {
         let temp_var_name = self.get_temp_var_name();
         let path_name = self.path.as_str();
-        let nested_pattern = self.field_type.unwrap().get_nested_pattern(true)?;
+        let nested_pattern = self.field_type.unwrap().get_nested_pattern(true);
         let reader = self.field_type.unwrap().get_lit_reader_token_stream(
             "&meta_value.list",
             "&meta_value.path",
@@ -109,7 +128,7 @@ impl ValuedField for NamedField {
     }
 
     fn get_construct_token_stream(&self) -> TokenStream {
-        let field_name = self.name.as_str();
+        let field_name = self.name.clone();
         let temp_var_name = self.get_temp_var_name();
         match self.field_type.is_required() {
             true => quote! {
@@ -130,30 +149,27 @@ impl ValuedField for NamedField {
 
 impl NamedField {
     pub fn from_ast(input: &SynField) -> Result<Self, Error> {
-        let attributes = Self::get_attributes(&input.attrs)?;
-        let mut path = input.ident.unwrap().to_string().clone();
-        if attributes.contains_key("path") {
-            let (path_lit, path_path) = attributes["path"];
-            path = get_lit_str(path_lit, path_path)?;
+        let attribute = Self::get_attribute(&input.attrs)?;
+        let mut path = input.ident.as_ref().unwrap().to_string();
+        if attribute.path.is_some() {
+            path = attribute.path.unwrap();
         }
 
         let mut is_enum = false;
-        if attributes.contains_key("enum_value") {
-            let (enum_value_lit, enum_value_path) = attributes["path"];
-            is_enum = get_lit_bool(enum_value_lit, enum_value_path)?
+        if attribute.eum_value.is_some() {
+            is_enum = attribute.eum_value.unwrap()
         }
         let field_type = FieldType::from_ast(&input.ty, is_enum)?;
         let mut default: Option<DefaultValue> = None;
-        if attributes.contains_key("default") {
-            let (default_lit, default_path) = attributes["path"];
-            default = Some(DefaultValue::from_lit(
-                &default_lit,
-                &default_path,
+        if attribute.default.is_some() {
+            default = Some(DefaultValue::from_string(
+                attribute.default.unwrap().clone(),
+                input,
                 &field_type.unwrap(),
             )?)
         }
         Ok(NamedField {
-            name: input.ident.unwrap().to_string().clone(),
+            name: input.ident.as_ref().unwrap().to_string(),
             path,
             default,
             field_type,
@@ -168,12 +184,12 @@ pub struct UnnamedFiled {
 }
 
 impl ValuedField for UnnamedFiled {
-    fn get_temp_var_name(&self) -> &str {
-        format!("temp_{}", self.index).as_str()
+    fn get_temp_var_name(&self) -> String {
+        format!("temp_{}", self.index)
     }
 
-    fn field_nested_type(&self) -> &str {
-        self.field_type.unwrap().to_string().as_str()
+    fn field_nested_type(&self) -> String {
+        self.field_type.unwrap().to_string()
     }
 
     fn get_default(&self) -> &Option<DefaultValue> {
@@ -182,21 +198,19 @@ impl ValuedField for UnnamedFiled {
 
     fn get_parse_token_stream(&self) -> TokenStream {
         let temp_var_name = self.get_temp_var_name();
-        let path_name = self.path.as_str();
-        let nested_pattern = self.field_type.unwrap().get_nested_pattern(false)?;
+        let nested_pattern = self.field_type.unwrap().get_nested_pattern(false);
         let reader =
             self.field_type
                 .unwrap()
                 .get_lit_reader_token_stream("&lit", "&input.path", "&input");
         quote! {
-            #nested_pattern if meta_value.path == yui::Symbol(#path_name) => {
+            #nested_pattern => {
                 #temp_var_name = Some(#reader?)
             }
         }
     }
 
     fn get_construct_token_stream(&self) -> TokenStream {
-        let field_name = self.name.as_str();
         let temp_var_name = self.get_temp_var_name();
         match self.field_type.is_required() {
             true => quote! {
@@ -217,21 +231,18 @@ impl ValuedField for UnnamedFiled {
 
 impl UnnamedFiled {
     pub fn from_ast(input: &SynField, index: u16) -> Result<Self, Error> {
+        let attribute = Self::get_attribute(&input.attrs)?;
+
         let mut is_enum = false;
-        let attributes = Self::get_attributes(&input.attrs)?;
-        if attributes.contains_key("enum_value") {
-            if attributes.contains_key("enum_value") {
-                let (enum_value_lit, enum_value_path) = attributes["path"];
-                is_enum = get_lit_bool(enum_value_lit, enum_value_path)?
-            }
+        if attribute.eum_value.is_some() {
+            is_enum = attribute.eum_value.unwrap()
         }
         let field_type = FieldType::from_ast(&input.ty, is_enum)?;
         let mut default: Option<DefaultValue> = None;
-        if attributes.contains_key("default") {
-            let (default_lit, default_path) = attributes["path"];
-            default = Some(DefaultValue::from_lit(
-                &default_lit,
-                &default_path,
+        if attribute.default.is_some() {
+            default = Some(DefaultValue::from_string(
+                attribute.default.unwrap().clone(),
+                input,
                 &field_type.unwrap(),
             )?)
         }
@@ -251,13 +262,13 @@ pub enum Fields {
 
 impl Fields {
     pub fn from_ast(fields: &SynFields) -> Result<Self, Error> {
-        match &data_struct.fields {
+        match fields {
             SynFields::Named(named_fields) => Ok(Fields::NamedFields(
                 named_fields
                     .named
                     .iter()
                     .map(|field| NamedField::from_ast(field))
-                    .collect()?,
+                    .collect::<Result<Vec<NamedField>, Error>>()?,
             )),
             SynFields::Unnamed(unnamed_fields) => {
                 let mut index: u16 = 0;
@@ -287,7 +298,11 @@ impl Fields {
         };
 
         let parse_token_stream = match &self {
-            Fields::NamedFields(fields) | Fields::UnnamedField(fields) => fields
+            Fields::NamedFields(fields) => fields
+                .iter()
+                .map(|field| field.get_parse_token_stream())
+                .collect(),
+            Fields::UnnamedField(fields) => fields
                 .iter()
                 .map(|field| field.get_parse_token_stream())
                 .collect(),

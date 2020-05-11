@@ -1,5 +1,6 @@
 use super::symbol::*;
-use super::{helper::get_lit_str, DefaultValue, EnumItem, EnumValue, FieldType, Fields, Type};
+use super::{helper::get_lit_str, Fields};
+use crate::helper::unwrap_punctuated_first;
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Data, DeriveInput, Error, Meta, NestedMeta};
@@ -11,17 +12,20 @@ pub struct Attribute {
 }
 
 impl Attribute {
-    pub fn from_ast(input: DeriveInput) -> Result<Self, Error> {
-        match input {
+    pub fn from_ast(input: &DeriveInput) -> Result<Self, Error> {
+        match &input.data {
             Data::Struct(data_struct) => {
                 let mut path = input.ident.to_string().clone();
 
                 if !input.attrs.is_empty() {
                     for attr in &input.attrs {
                         if attr.path == ATTRIBUTE {
-                            path = match attr.parse_meta() {
-                                Meta::List(list) => match list.nested.iter().first() {
-                                    NestedMeta::Lit(lit) => path = get_lit_str(&lit, &attr.path)?,
+                            path = match attr.parse_meta()? {
+                                Meta::List(list) => match unwrap_punctuated_first(
+                                    &list.nested,
+                                    Error::new_spanned(&list, "Unexpected nested meta"),
+                                )? {
+                                    NestedMeta::Lit(lit) => get_lit_str(&lit, &attr.path),
                                     _ => Err(Error::new_spanned(
                                         attr,
                                         "Meta of Attribute must be Lit List",
@@ -57,7 +61,9 @@ impl Attribute {
 
                 pub fn from_meta_list(
                     input: &syn::MetaList
-                ) -> Result<Self, syn::Error> {
+                ) -> Result<Self, syn::Error>
+                where
+                    Self: std::marker::Sized {
                     #parse
 
                     Ok(#name #construct)

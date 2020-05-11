@@ -1,5 +1,6 @@
 use super::helper::get_lit_str;
 use super::symbol::*;
+use crate::helper::unwrap_punctuated_first;
 use heck::SnakeCase;
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -18,13 +19,18 @@ impl EnumItem {
         if !input.attrs.is_empty() {
             for attr in input.attrs.iter() {
                 if attr.path == ENUM_ITEM_VALUE {
-                    match attr.parse_meta() {
-                        Meta::List(list) => match list.nested.iter().first() {
+                    match attr.parse_meta()? {
+                        Meta::List(list) => match unwrap_punctuated_first(
+                            &list.nested,
+                            Error::new_spanned(&list, "Unexpected nested segement"),
+                        )? {
                             NestedMeta::Lit(lit) => value = get_lit_str(&lit, &attr.path)?,
-                            _ => Err(Error::new_spanned(
-                                attr,
-                                "Meta of enum_item_value must be Lit List",
-                            )),
+                            _ => {
+                                return Err(Error::new_spanned(
+                                    attr,
+                                    "Meta of enum_item_value must be Lit List",
+                                ))
+                            }
                         },
                         _ => {
                             return Err(Error::new_spanned(
@@ -41,8 +47,8 @@ impl EnumItem {
     }
 
     pub fn to_pattern_token_stream(&self, enum_name: &String) -> TokenStream {
-        let item_value = self.value.as_str();
-        let item_ident = self.ident.as_str();
+        let item_value = self.value.clone();
+        let item_ident = self.ident.clone();
         quote! {
             #item_value => Ok(#enum_name::#item_ident)
         }
@@ -77,7 +83,7 @@ impl EnumValue {
     }
 
     pub fn get_lit_reader(&self) -> TokenStream {
-        let enum_name = self.name.as_str();
+        let enum_name = self.name.clone();
         let arms: Vec<TokenStream> = self
             .items
             .iter()
@@ -85,6 +91,7 @@ impl EnumValue {
             .collect();
         quote! {
             impl yui::traits::ValueEnum #enum_name {
+                type Err = syn::Error;
                 fn from_str(value: &str) -> Result<Self, Self::Err> {
                     match value {
                         #(#arms),*
