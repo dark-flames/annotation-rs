@@ -1,5 +1,4 @@
 use proc_macro::TokenStream;
-use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 use yui::EnumValue;
 
@@ -9,11 +8,10 @@ pub fn derive_enum_value(input: TokenStream) -> TokenStream {
 
     let enum_value = EnumValue::from_ast(&input);
 
-    match enum_value {
-        Ok(value) => TokenStream::from(value.get_lit_reader()),
-        Err(e) => {
-            println!("{}", e);
-            panic!();
-        }
-    }
+    //panic!(enum_value.unwrap().get_lit_reader().to_string());
+
+    TokenStream::from(match enum_value {
+        Ok(value) => value.get_lit_reader(),
+        Err(e) => e.to_compile_error(),
+    })
 }
