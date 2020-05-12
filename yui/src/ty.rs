@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::fmt;
-use syn::{Error, Field, Type as SynType, TypePath};
+use syn::{Error, Field, Ident, Type as SynType, TypePath};
 
 use super::helper::{
     get_nested_type, unwrap_punctuated_first, unwrap_punctuated_last, unwrap_type_path,
@@ -10,10 +10,10 @@ use super::helper::{
 pub enum Type {
     String,
     Bool,
-    Integer(String),
-    Float(String),
-    Object(String),
-    Enum(String),
+    Integer(Ident),
+    Float(Ident),
+    Object(Ident),
+    Enum(Ident),
     List(Box<Type>),
     Map(Box<Type>),
 }
@@ -65,28 +65,18 @@ impl Type {
         let first_nested_type =
             get_nested_type(path_first_segment, "Unexpected type path Argument")?;
 
-        let first_type_ident = &match first_nested_type {
-            SynType::Reference(reference) => match &*reference.elem {
-                SynType::Path(first_type_path) => unwrap_punctuated_last(
-                    &first_type_path.path.segments,
-                    Error::new_spanned(&type_path, "Unexpected type path segment"),
-                ),
-                _ => Err(Error::new_spanned(
-                    type_path,
-                    "Nested type must be type path",
-                )),
-            },
-            _ => Err(Error::new_spanned(
-                type_path,
-                "First nested type of HasMap must be &str",
-            )),
-        }?
-        .ident;
+        let first_nested_type_path =
+            unwrap_type_path(first_nested_type, "Key type of HasMap must be String")?;
 
-        if first_type_ident.to_string() != String::from("str") {
+        let first_nested_type_segment = unwrap_punctuated_first(
+            &first_nested_type_path.path.segments,
+            Error::new_spanned(type_path, "Key type of HasMap must be String"),
+        )?;
+
+        if first_nested_type_segment.ident.to_string() != "String" {
             return Err(Error::new_spanned(
                 type_path,
-                "First nested type of HasMap must be &str",
+                "Key type of HasMap must be String",
             ));
         }
 
@@ -105,9 +95,9 @@ impl Type {
             Error::new_spanned(type_path, "Unexpected type path segment"),
         )?;
 
-        let token = segment.ident.to_string().clone();
+        let token = segment.ident.clone();
 
-        match token.as_str() {
+        match token.to_string().as_str() {
             "String" => Ok(Type::String),
             "bool" => Ok(Type::Bool),
             "u8" | "u16" | "u32" | "u64" | "u128" | "i8" | "i16" | "i32" | "i64" | "i128" => {
@@ -121,10 +111,29 @@ impl Type {
                 type_path, is_enum,
             )?))),
             type_name if type_name.chars().next().unwrap().is_uppercase() => Ok(match is_enum {
-                true => Type::Enum(String::from(type_name)),
-                false => Type::Object(String::from(type_name)),
+                true => Type::Enum(token),
+                false => Type::Object(token),
             }),
             _ => Err(Error::new_spanned(type_path, "Unexpected type token")),
+        }
+    }
+
+    pub fn get_token_stream(&self) -> TokenStream {
+        match self {
+            Type::String => quote! { String },
+            Type::Bool => quote! { bool },
+            Type::Integer(ident) => quote! { #ident },
+            Type::Float(ident) => quote! { #ident },
+            Type::Object(ident) => quote! { #ident },
+            Type::Enum(ident) => quote! { #ident },
+            Type::List(ident) => {
+                let nested_token_stream = ident.get_token_stream();
+                quote! { Vec<#nested_token_stream> }
+            }
+            Type::Map(ident) => {
+                let nested_token_stream = ident.get_token_stream();
+                quote! { std::collections::HashMap<#nested_token_stream> }
+            }
         }
     }
 
@@ -189,41 +198,50 @@ impl Type {
         }
     }
 
-    pub fn get_lit_reader_token_stream(&self, lit: &str, path: &str, item: &str) -> TokenStream {
+    pub fn get_lit_reader_token_stream(
+        &self,
+        lit: TokenStream,
+        path: TokenStream,
+        item: TokenStream,
+    ) -> TokenStream {
         match self {
             Type::String => quote! {
-                yui::get_lit_str(#lit, #path)
+                yui::get_lit_str(&#lit, &#path)
             },
             Type::Bool => quote! {
-                yui::get_lit_bool(#lit, #path)
+                yui::get_lit_bool(&#lit, &#path)
             },
             Type::Integer(ty) => {
-                let result_type = ty.as_str();
+                let result_type = self.get_token_stream();
                 quote! {
-                    yui::get_lit_int::<#result_type>(#lit, #path)
+                    yui::get_lit_int::<#result_type>(&#lit, &#path)
                 }
             }
             Type::Float(ty) => {
-                let result_type = ty.as_str();
+                let result_type = self.get_token_stream();
                 quote! {
-                    yui::get_lit_float::<#result_type>(#lit, #path)
+                    yui::get_lit_float::<#result_type>(&#lit, &#path)
                 }
             }
             Type::Object(ty) => {
-                let result_type = ty.as_str();
+                let result_type = self.get_token_stream();
                 quote! {
-                    #result_type::from_meta_list(#item)
+                    #result_type::from_meta_list(&#item)
                 }
             }
             Type::Enum(ty) => {
-                let result_type = ty.as_str();
+                let result_type = self.get_token_stream();
                 quote! {
-                    #result_type::read_from_lit(#lit, #path)
+                    #result_type::read_from_lit(&#lit, &#path)
                 }
             }
             Type::List(ty) => {
                 let pattern = ty.get_nested_pattern(false);
-                let reader = ty.get_lit_reader_token_stream("&lit", "&meta_value.path", item);
+                let reader = ty.get_lit_reader_token_stream(
+                    quote! {"lit"},
+                    quote! {"meta_value.path"},
+                    item,
+                );
                 quote! {
                     meta_value.nested.iter().map(|meta_nested_meta| {
                         match &meta_nested_meta {
@@ -241,15 +259,15 @@ impl Type {
                 let result_type = result_type_string.as_str();
                 let pattern = ty.get_nested_pattern(true);
                 let reader = ty.get_lit_reader_token_stream(
-                    "&meta_value.lit",
-                    "&meta_value.path",
-                    "&meta_value",
+                    quote! {meta_value.lit},
+                    quote! {meta_value.path},
+                    quote! {meta_value},
                 );
                 quote! {
                     Ok(meta_value.nested.iter().map(|meta_nested_meta| {
                         match &meta_nested_meta {
                             #pattern => {
-                                OK((format!("{}", &meta_value.path.ident).as_str, #reader?))
+                                OK((format!("{}", &meta_value.path.ident), #reader?))
                             },
                             _ => Err(syn::Error::new_spanned(
                                 meta_nested_meta,

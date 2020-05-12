@@ -18,7 +18,7 @@ impl EnumItem {
 
         if !input.attrs.is_empty() {
             for attr in input.attrs.iter() {
-                if attr.path == ENUM_ITEM_VALUE {
+                if attr.path == VARIANT_VALUE {
                     match attr.parse_meta()? {
                         Meta::List(list) => match unwrap_punctuated_first(
                             &list.nested,

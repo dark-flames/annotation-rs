@@ -3,10 +3,10 @@ use super::{helper::get_lit_str, Fields};
 use crate::helper::unwrap_punctuated_first;
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Data, DeriveInput, Error, Meta, NestedMeta};
+use syn::{Data, DeriveInput, Error, Ident, Meta, NestedMeta};
 
 pub struct Attribute {
-    name: String,
+    ident: Ident,
     path: String,
     fields: Fields,
 }
@@ -38,7 +38,7 @@ impl Attribute {
                 }
 
                 Ok(Attribute {
-                    name: input.ident.to_string().clone(),
+                    ident: input.ident.clone(),
                     path,
                     fields: Fields::from_ast(&data_struct.fields)?,
                 })
@@ -48,10 +48,10 @@ impl Attribute {
     }
 
     pub fn get_reader(&self) -> TokenStream {
-        let name = self.name.clone();
+        let name = self.ident.clone();
         let parse = self.fields.get_parse_token_stream();
         let construct = self.fields.get_construct_token_stream();
-        let path = self.path.as_str();
+        let path = self.path.clone();
 
         quote! {
             impl Parse for #name {

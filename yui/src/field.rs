@@ -2,9 +2,10 @@ use super::symbol::*;
 use super::{helper::get_lit_bool, helper::get_lit_str, DefaultValue, FieldType};
 use crate::helper::get_lit_as_string;
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 use syn::{
-    Attribute as SynAttribute, Error, Field as SynField, Fields as SynFields, Meta, NestedMeta,
+    Attribute as SynAttribute, Error, Field as SynField, Fields as SynFields, Ident, Meta,
+    NestedMeta,
 };
 
 struct FieldAttribute {
@@ -65,9 +66,9 @@ trait ValuedField {
         Ok(attribute)
     }
 
-    fn get_temp_var_name(&self) -> String;
+    fn get_temp_var_name(&self) -> Ident;
 
-    fn field_nested_type(&self) -> String;
+    fn field_nested_type(&self) -> TokenStream;
 
     fn get_default(&self) -> &Option<DefaultValue>;
 
@@ -92,19 +93,19 @@ trait ValuedField {
 }
 
 pub struct NamedField {
-    name: String,
+    name: Ident,
     path: String,
     default: Option<DefaultValue>,
     field_type: FieldType,
 }
 
 impl ValuedField for NamedField {
-    fn get_temp_var_name(&self) -> String {
-        format!("temp_{}", self.name)
+    fn get_temp_var_name(&self) -> Ident {
+        self.name.clone()
     }
 
-    fn field_nested_type(&self) -> String {
-        self.field_type.unwrap().to_string()
+    fn field_nested_type(&self) -> TokenStream {
+        self.field_type.unwrap().get_token_stream()
     }
 
     fn get_default(&self) -> &Option<DefaultValue> {
@@ -116,9 +117,9 @@ impl ValuedField for NamedField {
         let path_name = self.path.as_str();
         let nested_pattern = self.field_type.unwrap().get_nested_pattern(true);
         let reader = self.field_type.unwrap().get_lit_reader_token_stream(
-            "&meta_value.list",
-            "&meta_value.path",
-            "&meta_value",
+            quote! {meta_value.list},
+            quote! {meta_value.path},
+            quote! {meta_value},
         );
         quote! {
             #nested_pattern if meta_value.path == yui::Symbol(#path_name) => {
@@ -141,7 +142,7 @@ impl ValuedField for NamedField {
                 }?
             },
             false => quote! {
-                #field_name: #temp_var_name
+                #temp_var_name
             },
         }
     }
@@ -169,7 +170,7 @@ impl NamedField {
             )?)
         }
         Ok(NamedField {
-            name: input.ident.as_ref().unwrap().to_string(),
+            name: input.ident.as_ref().unwrap().clone(),
             path,
             default,
             field_type,
@@ -184,12 +185,12 @@ pub struct UnnamedFiled {
 }
 
 impl ValuedField for UnnamedFiled {
-    fn get_temp_var_name(&self) -> String {
-        format!("temp_{}", self.index)
+    fn get_temp_var_name(&self) -> Ident {
+        format_ident!("temp_{:0}", self.index)
     }
 
-    fn field_nested_type(&self) -> String {
-        self.field_type.unwrap().to_string()
+    fn field_nested_type(&self) -> TokenStream {
+        self.field_type.unwrap().get_token_stream()
     }
 
     fn get_default(&self) -> &Option<DefaultValue> {
@@ -199,10 +200,11 @@ impl ValuedField for UnnamedFiled {
     fn get_parse_token_stream(&self) -> TokenStream {
         let temp_var_name = self.get_temp_var_name();
         let nested_pattern = self.field_type.unwrap().get_nested_pattern(false);
-        let reader =
-            self.field_type
-                .unwrap()
-                .get_lit_reader_token_stream("&lit", "&input.path", "&input");
+        let reader = self.field_type.unwrap().get_lit_reader_token_stream(
+            quote! {&lit},
+            quote! {&input.path},
+            quote! {&input},
+        );
         quote! {
             #nested_pattern => {
                 #temp_var_name = Some(#reader?)
