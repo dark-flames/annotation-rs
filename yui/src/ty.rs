@@ -211,25 +211,25 @@ impl Type {
             Type::Bool => quote! {
                 yui::get_lit_bool(&#lit, &#path)
             },
-            Type::Integer(ty) => {
+            Type::Integer(_) => {
                 let result_type = self.get_token_stream();
                 quote! {
                     yui::get_lit_int::<#result_type>(&#lit, &#path)
                 }
             }
-            Type::Float(ty) => {
+            Type::Float(_) => {
                 let result_type = self.get_token_stream();
                 quote! {
                     yui::get_lit_float::<#result_type>(&#lit, &#path)
                 }
             }
-            Type::Object(ty) => {
+            Type::Object(_) => {
                 let result_type = self.get_token_stream();
                 quote! {
                     #result_type::from_meta_list(&#item)
                 }
             }
-            Type::Enum(ty) => {
+            Type::Enum(_) => {
                 let result_type = self.get_token_stream();
                 quote! {
                     #result_type::read_from_lit(&#lit, &#path)

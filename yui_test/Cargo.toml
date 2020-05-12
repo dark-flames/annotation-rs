@@ -13,3 +13,6 @@ path = "../yui"
 [dependencies.yui_derive]
 version = "0.1"
 path = "../yui_derive"
+
+[lib]
+proc-macro = true
