@@ -14,5 +14,5 @@ path = "../yui"
 version = "0.1"
 path = "../yui_derive"
 
-[lib]
-proc-macro = true
+[dependencies.syn]
+version = "1.0"

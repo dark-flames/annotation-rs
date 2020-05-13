@@ -1,39 +1,31 @@
-#[macro_use]
-use yui_derive::YuiAttribute;
-use crate::enums::ForeignKeyType;
+use crate::enums::TestEnum;
 use std::collections::HashMap;
+use yui_derive::YuiAttribute;
+
+pub struct TestNoFieldStruct;
 
 #[derive(YuiAttribute)]
-struct PrimaryKey;
-
-#[derive(YuiAttribute)]
-struct Person {
-    pub name: String,
-    pub age: u8,
-    pub alive: bool,
-    pub weight: f32,
-}
-
-#[derive(YuiAttribute)]
-struct Position(i32, i32);
-
-#[derive(YuiAttribute)]
-#[attribute("JoinColumn")]
-pub struct JoinColumnAttributeStructure {
-    pub name: Option<String>,
-    pub referenced_column: Option<String>,
-    #[attribute_field(defualt = false)]
-    pub unique: bool,
+pub struct TestSimpleStruct {
+    #[attribute_field(path = "test_i32")]
+    pub test_int32: i32,
+    #[attribute_field(path = "test_u16")]
+    pub test_unsigned16: u16,
+    pub test_float: f32,
+    pub test_string: String,
+    #[attribute_field(enum_value = true, default = "variant_c")]
+    pub test_enum1: Option<TestEnum>,
     #[attribute_field(enum_value = true)]
-    pub foreign_key: ForeignKeyType,
-    #[attribute_field(path = "options")]
-    pub options_map: HashMap<String, String>,
+    pub test_enum2: TestEnum,
 }
 
 #[derive(YuiAttribute)]
-#[attribute("JoinTable")]
-pub struct JoinTableAttributeStructure {
-    pub name: Option<String>,
-    pub referenced_table: String,
-    pub columns: HashMap<String, JoinColumnAttributeStructure>,
+#[attribute("test_tuple")]
+pub struct TestTuple(i32, Option<String>);
+
+#[derive(YuiAttribute)]
+pub struct TestStruct {
+    pub object: TestSimpleStruct,
+    pub vector: Vec<String>,
+    #[attribute_field(enum_value = true)]
+    pub map: HashMap<String, TestEnum>,
 }

@@ -54,12 +54,12 @@ impl Attribute {
         let path = self.path.clone();
 
         quote! {
-            impl Parse for #name {
-                pub fn get_path() -> yui::Symbol {
-                    return yui::Symbol(#path);
+            impl yui::Parse for #name {
+                fn get_path() -> yui::Symbol {
+                    yui::Symbol::new(#path)
                 }
 
-                pub fn from_meta_list(
+                fn from_meta_list(
                     input: &syn::MetaList
                 ) -> Result<Self, syn::Error>
                 where

@@ -1,11 +1,12 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::fmt;
-use syn::{Error, Field, Ident, Type as SynType, TypePath};
+use syn::{Error, Field, Ident, PathSegment, Type as SynType, TypePath};
 
 use super::helper::{
     get_nested_type, unwrap_punctuated_first, unwrap_punctuated_last, unwrap_type_path,
 };
+use crate::helper::get_nested_types;
 
 pub enum Type {
     String,
@@ -19,74 +20,11 @@ pub enum Type {
 }
 
 impl Type {
-    fn get_list_nested_type(type_path: &TypePath, is_enum: bool) -> Result<Type, Error> {
-        let path_segment = unwrap_punctuated_first(
-            &type_path.path.segments,
-            Error::new_spanned(&type_path, "Unexpected type path segment"),
-        )?;
-
-        let nested_type = get_nested_type(path_segment, "Unexpected type path Argument")?;
-
-        match nested_type {
-            SynType::Path(type_path) => {
-                let ty = Type::from_ast(type_path, is_enum)?;
-                match &ty {
-                    Type::String
-                    | Type::Bool
-                    | Type::Integer(_)
-                    | Type::Float(_)
-                    | Type::Enum(_) => Ok(ty),
-                    _ => Err(Error::new_spanned(
-                        type_path,
-                        "Nested type in Vec can not be Object, Vec or Map, because these can not create from lit"
-                    ))
-                }
-            }
-            _ => Err(Error::new_spanned(
-                type_path,
-                "Nested type must be type path",
-            )),
-        }
-    }
-
-    fn get_map_nested_type(type_path: &TypePath, is_enum: bool) -> Result<Type, Error> {
-        let path_last_segment = unwrap_punctuated_last(
-            &type_path.path.segments,
-            Error::new_spanned(&type_path, "Unexpected type path segment"),
-        )?;
-
-        let path_first_segment = unwrap_punctuated_first(
-            &type_path.path.segments,
-            Error::new_spanned(&type_path, "Unexpected type path segment"),
-        )?;
-
-        let nested_type = get_nested_type(path_last_segment, "Unexpected type path Argument")?;
-
-        let first_nested_type =
-            get_nested_type(path_first_segment, "Unexpected type path Argument")?;
-
-        let first_nested_type_path =
-            unwrap_type_path(first_nested_type, "Key type of HasMap must be String")?;
-
-        let first_nested_type_segment = unwrap_punctuated_first(
-            &first_nested_type_path.path.segments,
-            Error::new_spanned(type_path, "Key type of HasMap must be String"),
-        )?;
-
-        if first_nested_type_segment.ident.to_string() != "String" {
-            return Err(Error::new_spanned(
-                type_path,
-                "Key type of HasMap must be String",
-            ));
-        }
-
-        match nested_type {
-            SynType::Path(type_path) => Type::from_ast(type_path, is_enum),
-            _ => Err(Error::new_spanned(
-                type_path,
-                "Nested type must be type path",
-            )),
-        }
+    fn get_nested_type_path(segment: &'a PathSegment) -> Result<Vec<&'a TypePath>, Error> {
+        get_nested_types(&segment, "Unexpect Arguments")?
+            .iter()
+            .map(|&ty| unwrap_type_path(ty, "Argument of HashMap or Vec must be type path"))
+            .collect()
     }
 
     pub fn from_ast(type_path: &TypePath, is_enum: bool) -> Result<Self, Error> {
@@ -104,17 +42,54 @@ impl Type {
                 Ok(Type::Integer(token))
             }
             "f32" | "f64" => Ok(Type::Float(token)),
-            "Vec" => Ok(Type::List(Box::new(Self::get_list_nested_type(
-                type_path, is_enum,
-            )?))),
-            "HashMap" => Ok(Type::Map(Box::new(Self::get_map_nested_type(
-                type_path, is_enum,
-            )?))),
-            type_name if type_name.chars().next().unwrap().is_uppercase() => Ok(match is_enum {
+            "Vec" => {
+                let nested_type_paths = Self::get_nested_type_path(&segment)?;
+
+                match nested_type_paths.first() {
+                    Some(&nested_type_path) => Ok(Type::List(Box::new(Self::from_ast(
+                        nested_type_path,
+                        is_enum,
+                    )?))),
+                    None => Err(Error::new_spanned(
+                        segment,
+                        "Vec need at least one argument",
+                    )),
+                }
+            }
+            "HashMap" => {
+                let nested_type_paths = Self::get_nested_type_path(&segment)?;
+
+                match nested_type_paths.first() {
+                    Some(&key_type_path) => {
+                        let key_segment = unwrap_punctuated_first(
+                            &key_type_path.path.segments,
+                            Error::new_spanned(key_type_path, "HashMap need at least two key"),
+                        )?;
+                        if key_segment.ident.to_string().as_str() != "String" {
+                            return Err(Error::new_spanned(
+                                segment,
+                                "Key of HashMap must be String type",
+                            ));
+                        }
+                    }
+                    None => return Err(Error::new_spanned(segment, "HashMap need two argument")),
+                }
+
+                match nested_type_paths.last() {
+                    Some(&nested_type_path) => Ok(Type::Map(Box::new(Self::from_ast(
+                        nested_type_path,
+                        is_enum,
+                    )?))),
+                    None => Err(Error::new_spanned(
+                        segment,
+                        "HashMap need at least two argument",
+                    )),
+                }
+            }
+            type_name => Ok(match is_enum {
                 true => Type::Enum(token),
                 false => Type::Object(token),
             }),
-            _ => Err(Error::new_spanned(type_path, "Unexpected type token")),
         }
     }
 
@@ -132,7 +107,7 @@ impl Type {
             }
             Type::Map(ident) => {
                 let nested_token_stream = ident.get_token_stream();
-                quote! { std::collections::HashMap<#nested_token_stream> }
+                quote! { std::collections::HashMap<String, #nested_token_stream> }
             }
         }
     }
@@ -230,18 +205,19 @@ impl Type {
                 }
             }
             Type::Enum(_) => {
-                let result_type = self.get_token_stream();
                 quote! {
-                    #result_type::read_from_lit(&#lit, &#path)
+                    yui::get_lit_str(&#lit, &#path)?.parse().map_err(
+                        |e: yui::Error| {
+                            syn::Error::new_spanned(&#lit, e.get_message())
+                        }
+                    )
                 }
             }
             Type::List(ty) => {
+                let result_type = ty.get_token_stream();
                 let pattern = ty.get_nested_pattern(false);
-                let reader = ty.get_lit_reader_token_stream(
-                    quote! {"lit"},
-                    quote! {"meta_value.path"},
-                    item,
-                );
+                let reader =
+                    ty.get_lit_reader_token_stream(quote! {lit}, quote! {meta_value.path}, item);
                 quote! {
                     meta_value.nested.iter().map(|meta_nested_meta| {
                         match &meta_nested_meta {
@@ -251,12 +227,11 @@ impl Type {
                                 "Only support List of Lit"
                             ))
                         }
-                    })
+                    }).collect::<Result<Vec<#result_type>, syn::Error>>()
                 }
             }
             Type::Map(ty) => {
-                let result_type_string = ty.to_string();
-                let result_type = result_type_string.as_str();
+                let result_type = ty.get_token_stream();
                 let pattern = ty.get_nested_pattern(true);
                 let reader = ty.get_lit_reader_token_stream(
                     quote! {meta_value.lit},
@@ -264,18 +239,33 @@ impl Type {
                     quote! {meta_value},
                 );
                 quote! {
-                    Ok(meta_value.nested.iter().map(|meta_nested_meta| {
-                        match &meta_nested_meta {
-                            #pattern => {
-                                OK((format!("{}", &meta_value.path.ident), #reader?))
-                            },
-                            _ => Err(syn::Error::new_spanned(
-                                meta_nested_meta,
-                                "Only support List of Lit"
-                            ))
-                        }
-                    }).collcet::<Result<Vec<(&str, #result_type)>, Error>>()?
-                        .into_iter().collect::<HasMap<&str, #result_type>>())
+                    {
+                        let value_pairs: Result<Vec<(String, #result_type)>, syn::Error> = meta_value.nested.iter().map(|meta_nested_meta| {
+                            match &meta_nested_meta {
+                                #pattern => {
+                                    Ok((
+                                         format!("{}",yui::unwrap_punctuated_first(
+                                                &meta_value.path.segments,
+                                                syn::Error::new_spanned(
+                                                    meta_value,
+                                                    "Unexpected type path segment"
+                                                )
+                                             )?.ident
+                                         ),
+                                         #reader?
+                                    ))
+                                },
+                                _ => Err(syn::Error::new_spanned(
+                                    meta_nested_meta,
+                                    "Only support List of Lit"
+                                ))
+                            }
+                        }).collect();
+
+                        value_pairs.map(|pairs| {
+                            pairs.into_iter().collect::<std::collections::HashMap<String, #result_type>>()
+                        })
+                    }
                 }
             }
         }

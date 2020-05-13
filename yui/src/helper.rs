@@ -41,6 +41,24 @@ pub fn get_nested_type<'a>(
     }
 }
 
+pub fn get_nested_types<'a>(
+    segment: &'a PathSegment,
+    message: &'static str,
+) -> Result<Vec<&'a Type>, Error> {
+    let error = Error::new_spanned(segment, message);
+    match &segment.arguments {
+        PathArguments::AngleBracketed(arguments) => arguments
+            .args
+            .iter()
+            .map(|argument| match argument {
+                GenericArgument::Type(nested_type) => Ok(nested_type),
+                _ => Err(error.clone()),
+            })
+            .collect(),
+        _ => Err(error.clone()),
+    }
+}
+
 #[inline]
 pub fn unwrap_type_path<'a>(ty: &'a Type, message: &'static str) -> Result<&'a TypePath, Error> {
     match ty {

@@ -104,8 +104,6 @@ impl EnumValue {
                     }
                 }
             }
-
-            impl yui::ValueEnum for #enum_ident {}
         }
     }
 }

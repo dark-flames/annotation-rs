@@ -78,7 +78,7 @@ trait ValuedField {
         let default_token = match self.get_default() {
             Some(value) => {
                 let value_string = value.to_string();
-                quote! {#value_string.parse()?}
+                quote! {Some(#value_string.parse().unwrap())}
             }
             None => quote! {None},
         };
@@ -117,13 +117,13 @@ impl ValuedField for NamedField {
         let path_name = self.path.as_str();
         let nested_pattern = self.field_type.unwrap().get_nested_pattern(true);
         let reader = self.field_type.unwrap().get_lit_reader_token_stream(
-            quote! {meta_value.list},
+            quote! {meta_value.lit},
             quote! {meta_value.path},
             quote! {meta_value},
         );
         quote! {
-            #nested_pattern if meta_value.path == yui::Symbol(#path_name) => {
-                #temp_var_name = Some(#reader?)
+            #nested_pattern if meta_value.path == yui::Symbol::new(#path_name) => {
+                #temp_var_name = Some(#reader?);
             }
         }
     }
@@ -179,7 +179,7 @@ impl NamedField {
 }
 
 pub struct UnnamedFiled {
-    index: u16,
+    index: usize,
     field_type: FieldType,
     default: Option<DefaultValue>,
 }
@@ -205,9 +205,10 @@ impl ValuedField for UnnamedFiled {
             quote! {&input.path},
             quote! {&input},
         );
+        let index = self.index;
         quote! {
-            #nested_pattern => {
-                #temp_var_name = Some(#reader?)
+            #nested_pattern if field_index == #index => {
+                #temp_var_name = Some(#reader?);
             }
         }
     }
@@ -232,7 +233,7 @@ impl ValuedField for UnnamedFiled {
 }
 
 impl UnnamedFiled {
-    pub fn from_ast(input: &SynField, index: u16) -> Result<Self, Error> {
+    pub fn from_ast(input: &SynField, index: usize) -> Result<Self, Error> {
         let attribute = Self::get_attribute(&input.attrs)?;
 
         let mut is_enum = false;
@@ -273,12 +274,10 @@ impl Fields {
                     .collect::<Result<Vec<NamedField>, Error>>()?,
             )),
             SynFields::Unnamed(unnamed_fields) => {
-                let mut index: u16 = 0;
                 let mut fields = Vec::new();
 
-                for field in unnamed_fields.unnamed.iter() {
+                for (index, field) in unnamed_fields.unnamed.iter().enumerate() {
                     fields.push(UnnamedFiled::from_ast(field, index)?);
-                    index += 1;
                 }
 
                 Ok(Fields::UnnamedField(fields))
@@ -314,11 +313,11 @@ impl Fields {
         match &self {
             Fields::NamedFields(_) | Fields::UnnamedField(_) => {
                 quote! {
-                    #(#temp_var_token_stream); *
+                    #(#temp_var_token_stream;)*
 
-                    for nested in input.nested.iter() {
+                    for (field_index, nested) in input.nested.iter().enumerate() {
                         match &nested {
-                            #(#parse_token_stream), *
+                            #(#parse_token_stream),*
                             _ => {
                                 return Err(syn::Error::new_spanned(
                                     nested,

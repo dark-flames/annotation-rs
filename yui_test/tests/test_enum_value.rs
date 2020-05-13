@@ -1,31 +1,9 @@
 use std::str::FromStr;
-use yui_test::enums::{FetchType, ForeignKeyType};
+use yui_test::enums::TestEnum;
 
 #[test]
-pub fn test_basic_map() {
-    assert_eq!(FetchType::from_str("eager").unwrap(), FetchType::Eager);
-    assert_eq!(
-        FetchType::from_str("lazy_fetch").unwrap(),
-        FetchType::LazyFetch
-    );
-}
-
-#[test]
-pub fn test_rename_variant_value() {
-    assert_eq!(
-        ForeignKeyType::from_str("one_to_one").unwrap(),
-        ForeignKeyType::OneToOneForeignKey
-    );
-    assert_eq!(
-        ForeignKeyType::from_str("one_to_many").unwrap(),
-        ForeignKeyType::OneToManyForeignKey
-    );
-    assert_eq!(
-        ForeignKeyType::from_str("many_to_one").unwrap(),
-        ForeignKeyType::ManyToOneForeignKey
-    );
-    assert_eq!(
-        ForeignKeyType::from_str("many_to_many").unwrap(),
-        ForeignKeyType::ManyToManyForeignKey
-    );
+pub fn test_enum() {
+    assert_eq!(TestEnum::from_str("aaa").unwrap(), TestEnum::VariantA);
+    assert_eq!(TestEnum::from_str("variant_b").unwrap(), TestEnum::VariantB);
+    assert_eq!(TestEnum::from_str("variant_c").unwrap(), TestEnum::VariantC);
 }

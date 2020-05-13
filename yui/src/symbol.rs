@@ -4,6 +4,12 @@ use syn::{Ident, Path};
 #[derive(Copy, Clone)]
 pub struct Symbol(&'static str);
 
+impl Symbol {
+    pub fn new(path: &'static str) -> Self {
+        Symbol(path)
+    }
+}
+
 impl PartialEq<Symbol> for Ident {
     fn eq(&self, word: &Symbol) -> bool {
         self == word.0
