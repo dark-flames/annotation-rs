@@ -115,14 +115,24 @@ impl ValuedField for NamedField {
     fn get_parse_token_stream(&self) -> TokenStream {
         let temp_var_name = self.get_temp_var_name();
         let path_name = self.path.as_str();
-        let nested_pattern = self.field_type.unwrap().get_nested_pattern(true);
+        let nested_ident = format_ident!("nested_{}", temp_var_name.clone());
+        let nested_pattern = self
+            .field_type
+            .unwrap()
+            .get_nested_pattern(true, nested_ident.clone());
         let reader = self.field_type.unwrap().get_lit_reader_token_stream(
-            quote! {meta_value.lit},
-            quote! {meta_value.path},
-            quote! {meta_value},
+            nested_ident.clone(),
+            quote! { #nested_ident.lit },
+            format_ident!("input_meta_list"),
+            nested_ident.clone(),
         );
+
+        let path_ident = self
+            .field_type
+            .unwrap()
+            .get_path_ident(nested_ident.clone());
         quote! {
-            #nested_pattern if meta_value.path == yui::Symbol::new(#path_name) => {
+            #nested_pattern if #path_ident == yui::Symbol::new(#path_name) => {
                 #temp_var_name = Some(#reader?);
             }
         }
@@ -199,11 +209,16 @@ impl ValuedField for UnnamedFiled {
 
     fn get_parse_token_stream(&self) -> TokenStream {
         let temp_var_name = self.get_temp_var_name();
-        let nested_pattern = self.field_type.unwrap().get_nested_pattern(false);
+        let nested_ident = format_ident!("nested_{}", temp_var_name.clone());
+        let nested_pattern = self
+            .field_type
+            .unwrap()
+            .get_nested_pattern(false, nested_ident.clone());
         let reader = self.field_type.unwrap().get_lit_reader_token_stream(
-            quote! {&lit},
-            quote! {&input.path},
-            quote! {&input},
+            nested_ident.clone(),
+            quote! { #nested_ident },
+            format_ident!("input_meta_list"),
+            nested_ident,
         );
         let index = self.index;
         quote! {
@@ -313,9 +328,18 @@ impl Fields {
         match &self {
             Fields::NamedFields(_) | Fields::UnnamedField(_) => {
                 quote! {
+                    let input_meta_list = match input {
+                        syn::Meta::List(list) => Ok(list),
+                        _ => Err(syn::Error::new_spanned(
+                            &input,
+                            "Argument of attribute must be a List"
+                        ))
+                    }?;
+
                     #(#temp_var_token_stream;)*
 
-                    for (field_index, nested) in input.nested.iter().enumerate() {
+
+                    for (field_index, nested) in input_meta_list.nested.iter().enumerate() {
                         match &nested {
                             #(#parse_token_stream),*
                             _ => {

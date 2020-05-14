@@ -1,4 +1,3 @@
-#[macro_use]
 use yui_derive::YuiEnumValue;
 
 #[derive(YuiEnumValue, Debug, PartialEq)]

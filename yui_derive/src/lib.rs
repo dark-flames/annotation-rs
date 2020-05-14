@@ -18,6 +18,7 @@ pub fn derive_attribute(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     let attribute = Attribute::from_ast(&input);
+
     TokenStream::from(match attribute {
         Ok(value) => value.get_reader(),
         Err(e) => e.to_compile_error(),

@@ -20,6 +20,7 @@ pub struct TestSimpleStruct {
 
 #[derive(YuiAttribute)]
 #[attribute("test_tuple")]
+#[attribute("test_tuple")]
 pub struct TestTuple(i32, Option<String>);
 
 #[derive(YuiAttribute)]

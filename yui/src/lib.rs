@@ -7,7 +7,7 @@ pub mod symbol;
 pub use crate::symbol::Symbol;
 
 mod traits;
-pub use crate::traits::Parse;
+pub use crate::traits::AttributeStructure;
 
 mod enum_value;
 pub use crate::enum_value::{EnumItem, EnumValue};

@@ -14,17 +14,6 @@ pub fn unwrap_punctuated_first<T, P>(
 }
 
 #[inline]
-pub fn unwrap_punctuated_last<T, P>(
-    punctuated: &Punctuated<T, P>,
-    error: Error,
-) -> Result<&T, Error> {
-    match punctuated.last() {
-        Some(s) => Ok(s),
-        None => Err(error),
-    }
-}
-
-#[inline]
 pub fn get_nested_type<'a>(
     segment: &'a PathSegment,
     message: &'static str,

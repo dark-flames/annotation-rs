@@ -1,10 +1,10 @@
 use crate::Symbol;
-use syn::MetaList;
+use syn::Meta;
 
-pub trait Parse {
+pub trait AttributeStructure {
     fn get_path() -> Symbol;
 
-    fn from_meta_list(input: &MetaList) -> Result<Self, syn::Error>
+    fn from_meta_list(input: &Meta) -> Result<Self, syn::Error>
     where
         Self: std::marker::Sized;
 }

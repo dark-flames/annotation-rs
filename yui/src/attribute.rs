@@ -54,13 +54,13 @@ impl Attribute {
         let path = self.path.clone();
 
         quote! {
-            impl yui::Parse for #name {
+            impl yui::AttributeStructure for #name {
                 fn get_path() -> yui::Symbol {
                     yui::Symbol::new(#path)
                 }
 
                 fn from_meta_list(
-                    input: &syn::MetaList
+                    input: &syn::Meta
                 ) -> Result<Self, syn::Error>
                 where
                     Self: std::marker::Sized {
