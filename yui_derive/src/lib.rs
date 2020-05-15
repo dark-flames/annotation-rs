@@ -1,6 +1,16 @@
+#![feature(in_band_lifetimes)]
+
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput};
-use yui::{Attribute, EnumValue};
+
+mod field;
+mod ty;
+
+mod attribute;
+use attribute::Attribute;
+
+mod enum_value;
+use enum_value::EnumValue;
 
 #[proc_macro_derive(YuiEnumValue, attributes(variant_value))]
 pub fn derive_enum_value(input: TokenStream) -> TokenStream {

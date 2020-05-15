@@ -1,6 +1,7 @@
 use crate::enums::TestEnum;
 use std::collections::HashMap;
-use yui_derive::YuiAttribute;
+
+use yui::YuiAttribute;
 
 pub struct TestNoFieldStruct;
 
@@ -19,7 +20,6 @@ pub struct TestSimpleStruct {
 }
 
 #[derive(YuiAttribute)]
-#[attribute("test_tuple")]
 #[attribute("test_tuple")]
 pub struct TestTuple(i32, Option<String>);
 

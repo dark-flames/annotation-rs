@@ -1,5 +1,5 @@
 [package]
-name = "yui"
+name = "yui_internal"
 version = "0.1.0"
 authors = ["dark-flames <dark_flames@outlook.com>"]
 edition = "2018"
@@ -11,9 +11,6 @@ version = "1.0.19"
 
 [dependencies.quote]
 version = "1.0.4"
-
-[dependencies.heck]
-version = "0.3.1"
 
 [dependencies.proc-macro2]
 version = "1.0.12"

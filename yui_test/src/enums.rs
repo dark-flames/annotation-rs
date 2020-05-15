@@ -1,4 +1,4 @@
-use yui_derive::YuiEnumValue;
+use yui::YuiEnumValue;
 
 #[derive(YuiEnumValue, Debug, PartialEq)]
 pub enum TestEnum {
