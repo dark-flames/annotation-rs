@@ -1,3 +1,4 @@
+use std::str::FromStr;
 use yui::YuiEnumValue;
 
 #[derive(YuiEnumValue, Debug, PartialEq)]
@@ -6,4 +7,11 @@ pub enum TestEnum {
     VariantA,
     VariantB,
     VariantC,
+}
+
+#[test]
+pub fn test_enum() {
+    assert_eq!(TestEnum::from_str("aaa").unwrap(), TestEnum::VariantA);
+    assert_eq!(TestEnum::from_str("variant_b").unwrap(), TestEnum::VariantB);
+    assert_eq!(TestEnum::from_str("variant_c").unwrap(), TestEnum::VariantC);
 }

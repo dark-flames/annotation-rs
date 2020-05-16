@@ -1,6 +1,7 @@
 use std::str::FromStr;
+use syn::export::fmt::Display;
 use syn::punctuated::Punctuated;
-use syn::{Error, GenericArgument, Lit, Path, PathArguments, PathSegment, Type, TypePath};
+use syn::{Error, GenericArgument, Lit, PathArguments, PathSegment, Type, TypePath};
 
 #[inline]
 pub fn unwrap_punctuated_first<T, P>(
@@ -57,20 +58,17 @@ pub fn unwrap_type_path<'a>(ty: &'a Type, message: &'static str) -> Result<&'a T
 }
 
 #[inline]
-pub fn get_lit_str(lit: &Lit, path: &Path) -> Result<String, Error> {
+pub fn get_lit_str<U: Display>(lit: &Lit, ident: &U) -> Result<String, Error> {
     match lit {
         Lit::Str(lit_str) => Ok(lit_str.value()),
         _ => Err(Error::new_spanned(
             lit,
-            format!(
-                "expected {} attribute to be a string",
-                path.get_ident().unwrap()
-            ),
+            format!("expected {} lit to be a string", ident),
         )),
     }
 }
 
-pub fn get_lit_as_string(lit: &Lit, path: &Path) -> Result<String, Error> {
+pub fn get_lit_as_string<U: Display>(lit: &Lit, ident: &U) -> Result<String, Error> {
     match lit {
         Lit::Str(lit_str) => Ok(lit_str.value()),
         Lit::Int(lit_int) => Ok(lit_int.to_string()),
@@ -78,16 +76,13 @@ pub fn get_lit_as_string(lit: &Lit, path: &Path) -> Result<String, Error> {
         Lit::Bool(lit_bool) => Ok(lit_bool.value.to_string()),
         _ => Err(Error::new_spanned(
             lit,
-            format!(
-                "expected {} attribute to be a string",
-                path.get_ident().unwrap()
-            ),
+            format!("expected {} lit to be a string/integer/float/boll", ident),
         )),
     }
 }
 
 #[inline]
-pub fn get_lit_int<T: FromStr>(lit: &Lit, path: &Path) -> Result<T, Error>
+pub fn get_lit_int<T: FromStr, U: Display>(lit: &Lit, ident: &U) -> Result<T, Error>
 where
     <T as std::str::FromStr>::Err: std::fmt::Display,
 {
@@ -95,16 +90,13 @@ where
         Lit::Int(lit_int) => Ok(lit_int.base10_parse().unwrap()),
         _ => Err(Error::new_spanned(
             lit,
-            format!(
-                "expected {} attribute to be a integer",
-                path.get_ident().unwrap()
-            ),
+            format!("expected {} lit to be a integer", ident),
         )),
     }
 }
 
 #[inline]
-pub fn get_lit_float<T: FromStr>(lit: &Lit, path: &Path) -> Result<T, Error>
+pub fn get_lit_float<T: FromStr, U: Display>(lit: &Lit, ident: &U) -> Result<T, Error>
 where
     <T as std::str::FromStr>::Err: std::fmt::Display,
 {
@@ -112,24 +104,18 @@ where
         Lit::Float(lit_float) => Ok(lit_float.base10_parse().unwrap()),
         _ => Err(Error::new_spanned(
             lit,
-            format!(
-                "expected {} attribute to be a float",
-                path.get_ident().unwrap()
-            ),
+            format!("expected {} lit to be a float", ident),
         )),
     }
 }
 
 #[inline]
-pub fn get_lit_bool(lit: &Lit, path: &Path) -> Result<bool, Error> {
+pub fn get_lit_bool<U: Display>(lit: &Lit, ident: &U) -> Result<bool, Error> {
     match lit {
         Lit::Bool(lit_bool) => Ok(lit_bool.value),
         _ => Err(Error::new_spanned(
             lit,
-            format!(
-                "expected {} attribute to be a bool",
-                path.get_ident().unwrap()
-            ),
+            format!("expected {} lit to be a bool", ident),
         )),
     }
 }

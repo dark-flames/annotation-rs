@@ -1,0 +1,22 @@
+[package]
+name = "yui"
+version = "0.1.0"
+authors = ["dark-flames <dark_flames@outlook.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+yui_derive = { version = "=0.1.0", optional = true, path = "../yui_derive" }
+syn = { version = "1.0" }
+
+[dev-dependencies]
+yui_derive = { version = "0.1", path = "../yui_derive" }
+
+[dependencies.yui_internal]
+version = "0.1"
+path = "../yui_internal"
+
+[features]
+derive = ["yui_derive"]
+

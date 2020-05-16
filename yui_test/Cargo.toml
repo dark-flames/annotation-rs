@@ -13,3 +13,14 @@ features = ["derive"]
 
 [dependencies.syn]
 version = "1.0"
+
+[dependencies.proc-macro2]
+version = "1.0.12"
+
+[dependencies.quote]
+version = "1.0.4"
+
+
+[lib]
+
+proc-macro = true
