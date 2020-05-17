@@ -1,10 +1,10 @@
 mod attribute;
 mod enums;
 
-use crate::attribute::{TestNoFieldStruct, TestSimpleStruct};
+use crate::attribute::TestNoFieldStruct;
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse::Parse, parse_macro_input, DeriveInput, Ident};
+use syn::{parse_macro_input, DeriveInput};
 use yui::Attributes;
 
 #[proc_macro_derive(NoField, attributes(TestNoFieldStruct))]

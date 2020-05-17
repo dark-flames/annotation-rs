@@ -2,9 +2,7 @@ use yui_test::NoField;
 
 #[derive(NoField)]
 #[TestNoFieldStruct]
-struct Test {
-    a: i32,
-}
+struct Test;
 
 #[test]
 pub fn test() {

@@ -1,5 +1,5 @@
 use crate::Symbol;
-use syn::parse::{Parse, ParseBuffer, ParseStream};
+use syn::parse::{Parse, ParseBuffer};
 use syn::{AttributeArgs, DeriveInput, Error, Meta};
 
 pub trait AttributeStructure {

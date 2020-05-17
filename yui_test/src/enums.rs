@@ -1,5 +1,7 @@
-use std::str::FromStr;
 use yui::YuiEnumValue;
+
+#[cfg(test)]
+use std::str::FromStr;
 
 #[derive(YuiEnumValue, Debug, PartialEq)]
 pub enum TestEnum {
