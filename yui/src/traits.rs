@@ -5,7 +5,7 @@ use syn::{AttributeArgs, DeriveInput, Error, Meta};
 pub trait AttributeStructure {
     fn get_path() -> Symbol;
 
-    fn from_meta(input: Meta) -> Result<Self, syn::Error>
+    fn from_meta(input: &Meta) -> Result<Self, syn::Error>
     where
         Self: std::marker::Sized;
 
@@ -24,7 +24,7 @@ impl<T: AttributeStructure> Attributes<T> {
             .attrs
             .iter()
             .map(|attr| match attr.parse_meta() {
-                Ok(meta) => T::from_meta(meta),
+                Ok(meta) => T::from_meta(&meta),
                 Err(e) => Err(e),
             })
             .collect::<Result<Vec<T>, Error>>()?;

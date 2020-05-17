@@ -205,7 +205,7 @@ impl Type {
             Type::Object(_) => {
                 let result_type = self.get_token_stream();
                 quote! {
-                    #result_type::from_meta_list(&#meta_list)
+                    #result_type::from_meta(&#meta_list)
                 }
             }
             Type::Enum(_) => {

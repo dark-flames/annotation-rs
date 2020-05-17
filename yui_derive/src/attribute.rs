@@ -64,7 +64,7 @@ impl Attribute {
                 }
 
                 fn from_meta(
-                    input: syn::Meta
+                    input: &syn::Meta
                 ) -> Result<Self, syn::Error>
                 where
                     Self: std::marker::Sized {

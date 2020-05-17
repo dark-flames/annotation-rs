@@ -420,7 +420,7 @@ impl Fields {
                     }?;
 
                     let mut attribute_args: syn::AttributeArgs = syn::AttributeArgs::new();
-                    for nested in input_meta_list.nested {
+                    for nested in input_meta_list.nested.clone() {
                         attribute_args.push(nested)
                     }
 
