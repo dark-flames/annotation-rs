@@ -15,10 +15,10 @@ features = ["derive"]
 version = "1.0"
 
 [dependencies.proc-macro2]
-version = "1.0.12"
+version = "1.0"
 
 [dependencies.quote]
-version = "1.0.4"
+version = "1.0"
 
 
 [lib]

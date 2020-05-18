@@ -12,6 +12,8 @@ use attribute::Attribute;
 mod enum_value;
 use enum_value::EnumValue;
 
+mod reader;
+
 #[proc_macro_derive(YuiEnumValue, attributes(variant_value))]
 pub fn derive_enum_value(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

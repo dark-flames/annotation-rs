@@ -11,13 +11,14 @@ version = "0.1"
 path = "../yui_internal"
 
 [dependencies.syn]
-version = "1.0.19"
+version = "1.0"
+features = ["fold", "full"]
 
 [dependencies.quote]
-version = "1.0.4"
+version = "1.0"
 
 [dependencies.proc-macro2]
-version = "1.0.12"
+version = "1.0"
 
 [dependencies.heck]
 version = "0.3.1"
