@@ -3,7 +3,7 @@ use yui::YuiEnumValue;
 #[cfg(test)]
 use std::str::FromStr;
 
-#[derive(YuiEnumValue, Debug, PartialEq)]
+#[derive(YuiEnumValue, Debug, PartialEq, Clone)]
 pub enum TestEnum {
     #[variant_value("aaa")]
     VariantA,

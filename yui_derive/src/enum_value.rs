@@ -53,6 +53,13 @@ impl EnumItem {
             #item_value => Ok(#enum_name::#item_ident)
         }
     }
+
+    pub fn to_token_pattern_arm(&self, enum_name: &Ident) -> TokenStream {
+        let item_ident = &self.ident;
+        quote! {
+            #enum_name::#item_ident => quote::quote!{#enum_name::#item_ident}
+        }
+    }
 }
 
 pub struct EnumValue {
@@ -82,13 +89,19 @@ impl EnumValue {
         }
     }
 
-    pub fn get_lit_reader(&self) -> TokenStream {
+    pub fn get_implement(&self) -> TokenStream {
         let enum_ident = &self.ident;
         let enum_name = self.ident.to_string();
         let arms: Vec<TokenStream> = self
             .items
             .iter()
             .map(|item| item.to_pattern_token_stream(&self.ident))
+            .collect();
+
+        let to_token_arms: Vec<TokenStream> = self
+            .items
+            .iter()
+            .map(|item| item.to_token_pattern_arm(&self.ident))
             .collect();
         quote! {
             impl std::str::FromStr for #enum_ident {
@@ -103,6 +116,18 @@ impl EnumValue {
                         )
                     }
                 }
+            }
+
+            impl quote::ToTokens for #enum_ident {
+                fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+                    use quote::TokenStreamExt;
+                    tokens.append(proc_macro2::Group::new(
+                        proc_macro2::Delimiter::Brace,
+                        match self {
+                            #(#to_token_arms),*
+                        },
+                    ))
+                 }
             }
         }
     }

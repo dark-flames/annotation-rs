@@ -3,5 +3,6 @@ members = [
     "yui",
     "yui_internal",
     "yui_derive",
+    "yui_test_attribute",
     "yui_test"
 ]

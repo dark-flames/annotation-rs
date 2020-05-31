@@ -1,5 +1,4 @@
 #![feature(in_band_lifetimes)]
-
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput};
 
@@ -10,6 +9,7 @@ mod attribute;
 use attribute::Attribute;
 
 mod enum_value;
+use crate::reader::{GetAttributeParam, ReaderConfig};
 use enum_value::EnumValue;
 
 mod reader;
@@ -20,7 +20,7 @@ pub fn derive_enum_value(input: TokenStream) -> TokenStream {
 
     let enum_value = EnumValue::from_ast(&input);
     TokenStream::from(match enum_value {
-        Ok(value) => value.get_lit_reader(),
+        Ok(value) => value.get_implement(),
         Err(e) => e.to_compile_error(),
     })
 }
@@ -31,8 +31,28 @@ pub fn derive_attribute(input: TokenStream) -> TokenStream {
 
     let attribute = Attribute::from_ast(&input);
 
+    //panic!(attribute.unwrap().get_implement().to_string());
+
     TokenStream::from(match attribute {
         Ok(value) => value.get_implement(),
         Err(e) => e.to_compile_error(),
     })
+}
+
+#[proc_macro]
+pub fn generate_reader(input: TokenStream) -> TokenStream {
+    let config = parse_macro_input!(input as ReaderConfig);
+    TokenStream::from(config.get_reader())
+}
+
+#[proc_macro]
+pub fn __get_attribute(input: TokenStream) -> TokenStream {
+    let config = parse_macro_input!(input as GetAttributeParam);
+    TokenStream::from(config.get_attribute())
+}
+
+#[proc_macro]
+pub fn __has_attribute(input: TokenStream) -> TokenStream {
+    let config = parse_macro_input!(input as GetAttributeParam);
+    TokenStream::from(config.has_attribute())
 }

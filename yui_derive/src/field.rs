@@ -1,12 +1,13 @@
 use super::ty::{DefaultValue, FieldType};
 
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
+use quote::{format_ident};
 use syn::{
     Attribute as SynAttribute, Error, Field as SynField, Fields as SynFields, Ident, Meta,
     NestedMeta,
 };
 use yui_internal::{get_lit_as_string, get_lit_bool, get_lit_str, Symbol};
+use crate::reader::Interpolated;
 
 struct FieldAttribute {
     pub path: Option<String>,
@@ -85,11 +86,11 @@ trait ValuedField {
         let default_token = match self.get_default() {
             Some(value) => {
                 let value_string = value.to_string();
-                quote! {Some(#value_string.parse().unwrap())}
+                quote::quote! {Some(#value_string.parse().unwrap())}
             }
-            None => quote! {None},
+            None => quote::quote! {None},
         };
-        quote! {
+        quote::quote! {
             let mut #temp_var_name: Option<#field_nested_type> = #default_token
         }
     }
@@ -112,7 +113,7 @@ impl ValuedField for NamedField {
     }
 
     fn field_nested_type(&self) -> TokenStream {
-        self.field_type.unwrap().get_token_stream()
+        self.field_type.unwrap().get_type_token_stream()
     }
 
     fn get_default(&self) -> &Option<DefaultValue> {
@@ -129,8 +130,8 @@ impl ValuedField for NamedField {
             .get_nested_pattern(true, nested_ident.clone());
         let reader = self.field_type.unwrap().get_lit_reader_token_stream(
             nested_ident.clone(),
-            quote! { #nested_ident.lit },
-            quote! { String::from(#path_name) },
+            quote::quote! { #nested_ident.lit },
+            quote::quote! { String::from(#path_name) },
             nested_ident.clone(),
         );
 
@@ -138,7 +139,7 @@ impl ValuedField for NamedField {
             .field_type
             .unwrap()
             .get_path_ident(nested_ident.clone());
-        quote! {
+        quote::quote! {
             #nested_pattern if #path_ident == yui::Symbol::new(#path_name) => {
                 #temp_var_name = Some(#reader?);
             }
@@ -149,7 +150,7 @@ impl ValuedField for NamedField {
         let field_name = self.name.clone();
         let temp_var_name = self.get_temp_var_name();
         match self.field_type.is_required() {
-            true => quote! {
+            true => quote::quote! {
                 #field_name: match #temp_var_name {
                     Some(value) => Ok(value),
                     None => Err(syn::Error::new_spanned(
@@ -158,7 +159,7 @@ impl ValuedField for NamedField {
                     ))
                 }?
             },
-            false => quote! {
+            false => quote::quote! {
                 #temp_var_name
             },
         }
@@ -207,7 +208,7 @@ impl ValuedField for UnnamedFiled {
     }
 
     fn field_nested_type(&self) -> TokenStream {
-        self.field_type.unwrap().get_token_stream()
+        self.field_type.unwrap().get_type_token_stream()
     }
 
     fn get_default(&self) -> &Option<DefaultValue> {
@@ -234,12 +235,12 @@ impl ValuedField for UnnamedFiled {
 
         let reader = self.field_type.unwrap().get_lit_reader_token_stream(
             nested_ident.clone(),
-            quote! { #nested_ident },
-            quote! { String::from(#lit_name) },
+            quote::quote! { #nested_ident },
+            quote::quote! { String::from(#lit_name) },
             nested_ident,
         );
 
-        quote! {
+        quote::quote! {
             #nested_pattern if field_index == #index => {
                 #temp_var_name = Some(#reader?);
             }
@@ -249,7 +250,7 @@ impl ValuedField for UnnamedFiled {
     fn get_construct_token_stream(&self) -> TokenStream {
         let temp_var_name = self.get_temp_var_name();
         match self.field_type.is_required() {
-            true => quote! {
+            true => quote::quote! {
                 match #temp_var_name {
                     Some(value) => Ok(value),
                     None => Err(syn::Error::new_spanned(
@@ -258,7 +259,7 @@ impl ValuedField for UnnamedFiled {
                     ))
                 }?
             },
-            false => quote! {
+            false => quote::quote! {
                 #temp_var_name
             },
         }
@@ -351,7 +352,7 @@ impl Fields {
 
         match &self {
             Fields::NamedFields(_) | Fields::UnnamedField(_) => {
-                quote! {
+                quote::quote! {
                     #(#temp_var_token_stream;)*
 
                     for (field_index, nested) in #attributes_args_ident.iter().enumerate() {
@@ -369,7 +370,7 @@ impl Fields {
                     #construct
                 }
             }
-            _ => quote! {
+            _ => quote::quote! {
                 panic!("No Field attribute structure can not parse from attribute args");
             },
         }
@@ -382,7 +383,7 @@ impl Fields {
                     .iter()
                     .map(|field| field.get_construct_token_stream())
                     .collect();
-                quote! {
+                quote::quote! {
                     Ok(#name {
                         #(#fields_token_stream),*
                     })
@@ -393,7 +394,7 @@ impl Fields {
                     .iter()
                     .map(|field| field.get_construct_token_stream())
                     .collect();
-                quote! {
+                quote::quote! {
                     (
                         Ok(#name (
                             #(#fields_token_stream),*
@@ -402,7 +403,7 @@ impl Fields {
                 }
             }
             Fields::None => {
-                quote! {Ok(#name)}
+                quote::quote! {Ok(#name)}
             }
         }
     }
@@ -410,7 +411,7 @@ impl Fields {
     pub fn parse_meta_token_stream(&self, name: Ident) -> TokenStream {
         match self {
             Fields::NamedFields(_) | Fields::UnnamedField(_) => {
-                quote! {
+                quote::quote! {
                     let input_meta_list = match input {
                         syn::Meta::List(list) => Ok(list),
                         _ => Err(syn::Error::new_spanned(
@@ -429,8 +430,93 @@ impl Fields {
             }
             Fields::None => {
                 let construct = self.construct_token_stream(name);
-                quote! {
+                quote::quote! {
                     #construct
+                }
+            }
+        }
+    }
+
+    pub fn get_to_token_temp_value_token_stream(&self) -> Vec<TokenStream> {
+        match &self {
+            Fields::NamedFields(fields) => fields
+                .iter()
+                .map(|field| {
+                    let value_name = field.get_temp_var_name();
+                    let field_name = field.name.clone();
+                    let value_token = field.field_type.to_token_token_stream(
+                        quote::quote! {
+                            self.#field_name.clone()
+                        },
+                        value_name.clone()
+                    );
+
+                    quote::quote! {
+                        let #value_name = #value_token
+                    }
+                })
+                .collect(),
+            Fields::UnnamedField(fields) => fields
+                .iter()
+                .map(|field| {
+                    let value_name = field.get_temp_var_name();
+                    let index = field.index.clone();
+                    let value_token = field.field_type.to_token_token_stream(
+                        quote::quote! {
+                            self.#index.clone()
+                        },
+                        value_name.clone()
+                    );
+
+                    quote::quote! {
+                        let #value_name = #value_token
+                    }
+                })
+                .collect(),
+            _ => Vec::new(),
+        }
+    }
+
+    pub fn get_to_token_token_stream(&self, name: Ident) -> TokenStream {
+        match self {
+            Fields::None => quote::quote! {
+                #name
+            },
+            Fields::NamedFields(fields) => {
+                let field_tokens: Vec<TokenStream> = fields
+                    .iter()
+                    .map(|field| {
+                        let field_name = field.name.clone();
+                        let temp_value_str = field.get_temp_var_name().to_string();
+                        let temp_value = temp_value_str.as_str();
+                        let temp_value_interpolated = Interpolated::new(temp_value);
+                        quote::quote! {
+                            #field_name: #temp_value_interpolated
+                        }
+                    })
+                    .collect();
+                quote::quote! {
+                    #name {
+                        #(#field_tokens),*
+                    }
+                }
+            }
+            Fields::UnnamedField(fields) => {
+                let field_tokens: Vec<TokenStream> = fields
+                    .iter()
+                    .map(|field| {
+                        let temp_value_str = field.get_temp_var_name().to_string();
+                        let temp_value = temp_value_str.as_str();
+                        let temp_value_interpolated = Interpolated::new(temp_value);
+                        quote::quote! {
+                            #temp_value_interpolated
+                        }
+                    })
+                    .collect();
+                quote::quote! {
+                    #name {
+                        #(#field_tokens),*
+                    }
                 }
             }
         }

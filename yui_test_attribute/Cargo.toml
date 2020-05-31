@@ -1,5 +1,5 @@
 [package]
-name = "yui_test"
+name = "yui_test_attribute"
 version = "0.1.0"
 authors = ["dark-flames <dark_flames@outlook.com>"]
 edition = "2018"
@@ -11,10 +11,6 @@ version = "0.1.0"
 path = "../yui"
 features = ["derive"]
 
-[dependencies.yui_test_attribute]
-version = "0.1.0"
-path = "../yui_test_attribute"
-
 [dependencies.syn]
 version = "1.0"
 
@@ -23,10 +19,3 @@ version = "1.0"
 
 [dependencies.quote]
 version = "1.0"
-
-
-[lib]
-proc-macro = true
-
-[features]
-const_unstable = []

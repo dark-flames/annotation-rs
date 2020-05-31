@@ -1,9 +1,11 @@
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
+use quote::{format_ident};
 use std::fmt;
 use syn::{Error, Field, Ident, PathSegment, Type as SynType, TypePath};
+use super::reader::InterpolatedList;
 
 use yui_internal::{get_nested_type, get_nested_types, unwrap_punctuated_first, unwrap_type_path};
+use crate::reader::Interpolated;
 
 pub enum Type {
     String,
@@ -17,7 +19,7 @@ pub enum Type {
 }
 
 impl Type {
-    fn get_nested_type_path(segment: &'a PathSegment) -> Result<Vec<&'a TypePath>, Error> {
+    fn get_nested_type_path(segment: &PathSegment) -> Result<Vec<&TypePath>, Error> {
         get_nested_types(&segment, "Unexpect Arguments")?
             .iter()
             .map(|&ty| unwrap_type_path(ty, "Argument of HashMap or Vec must be type path"))
@@ -98,76 +100,76 @@ impl Type {
         }
     }
 
-    pub fn get_token_stream(&self) -> TokenStream {
+    pub fn get_type_token_stream(&self) -> TokenStream {
         match self {
-            Type::String => quote! { String },
-            Type::Bool => quote! { bool },
-            Type::Integer(ident) => quote! { #ident },
-            Type::Float(ident) => quote! { #ident },
-            Type::Object(ident) => quote! { #ident },
-            Type::Enum(ident) => quote! { #ident },
+            Type::String => quote::quote! { String },
+            Type::Bool => quote::quote! { bool },
+            Type::Integer(ident) => quote::quote! { #ident },
+            Type::Float(ident) => quote::quote! { #ident },
+            Type::Object(ident) => quote::quote! { #ident },
+            Type::Enum(ident) => quote::quote! { #ident },
             Type::List(ident) => {
-                let nested_token_stream = ident.get_token_stream();
-                quote! { Vec<#nested_token_stream> }
+                let nested_token_stream = ident.get_type_token_stream();
+                quote::quote! { Vec<#nested_token_stream> }
             }
             Type::Map(ident) => {
-                let nested_token_stream = ident.get_token_stream();
-                quote! { std::collections::HashMap<String, #nested_token_stream> }
+                let nested_token_stream = ident.get_type_token_stream();
+                quote::quote! { std::collections::HashMap<String, #nested_token_stream> }
             }
         }
     }
 
     pub fn get_nested_pattern(&self, named: bool, nested_ident: Ident) -> TokenStream {
         match (self, named) {
-            (Type::String, true) => quote! {
+            (Type::String, true) => quote::quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::NameValue(#nested_ident)
                 )
             },
-            (Type::String, false) => quote! {
+            (Type::String, false) => quote::quote! {
                 syn::NestedMeta::Lit(#nested_ident)
             },
-            (Type::Bool, true) => quote! {
+            (Type::Bool, true) => quote::quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::NameValue(#nested_ident)
                 )
             },
-            (Type::Bool, false) => quote! {
+            (Type::Bool, false) => quote::quote! {
                 syn::NestedMeta::Lit(#nested_ident)
             },
-            (Type::Integer(_), true) => quote! {
+            (Type::Integer(_), true) => quote::quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::NameValue(#nested_ident)
                 )
             },
-            (Type::Integer(_), false) => quote! {
+            (Type::Integer(_), false) => quote::quote! {
                 syn::NestedMeta::Lit(#nested_ident)
             },
-            (Type::Float(_), true) => quote! {
+            (Type::Float(_), true) => quote::quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::NameValue(#nested_ident)
                 )
             },
-            (Type::Float(_), false) => quote! {
+            (Type::Float(_), false) => quote::quote! {
                 syn::NestedMeta::Lit(#nested_ident)
             },
-            (Type::Object(_), true) => quote! {
+            (Type::Object(_), true) => quote::quote! {
                 syn::NestedMeta::Meta(#nested_ident)
             },
-            (Type::Enum(_), true) => quote! {
+            (Type::Enum(_), true) => quote::quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::NameValue(#nested_ident)
                 )
             },
-            (Type::Enum(_), false) => quote! {
+            (Type::Enum(_), false) => quote::quote! {
                 syn::NestedMeta::Lit(#nested_ident)
             },
-            (Type::List(_), true) => quote! {
+            (Type::List(_), true) => quote::quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::List(#nested_ident)
                 )
             },
-            (Type::Map(_), true) => quote! {
+            (Type::Map(_), true) => quote::quote! {
                 syn::NestedMeta::Meta(
                     syn::Meta::List(#nested_ident)
                 )
@@ -184,32 +186,32 @@ impl Type {
         meta_list: Ident,
     ) -> TokenStream {
         match self {
-            Type::String => quote! {
+            Type::String => quote::quote! {
                 yui::get_lit_str(&#nested_lit, &#path)
             },
-            Type::Bool => quote! {
+            Type::Bool => quote::quote! {
                 yui::get_lit_bool(&#nested_lit, &#path)
             },
             Type::Integer(_) => {
-                let result_type = self.get_token_stream();
-                quote! {
+                let result_type = self.get_type_token_stream();
+                quote::quote! {
                     yui::get_lit_int::<#result_type, String>(&#nested_lit, &#path)
                 }
             }
             Type::Float(_) => {
-                let result_type = self.get_token_stream();
-                quote! {
+                let result_type = self.get_type_token_stream();
+                quote::quote! {
                     yui::get_lit_float::<#result_type, String>(&#nested_lit, &#path)
                 }
             }
             Type::Object(_) => {
-                let result_type = self.get_token_stream();
-                quote! {
+                let result_type = self.get_type_token_stream();
+                quote::quote! {
                     #result_type::from_meta(&#meta_list)
                 }
             }
             Type::Enum(_) => {
-                quote! {
+                quote::quote! {
                     yui::get_lit_str(&#nested_lit, &#path)?.parse().map_err(
                         |e: yui::Error| {
                             syn::Error::new_spanned(&#nested_lit, e.get_message())
@@ -218,16 +220,16 @@ impl Type {
                 }
             }
             Type::List(ty) => {
-                let result_type = ty.get_token_stream();
+                let result_type = ty.get_type_token_stream();
                 let list_nested_ident = format_ident! {"list_{}", nested_ident};
                 let pattern = ty.get_nested_pattern(false, list_nested_ident.clone());
                 let reader = ty.get_lit_reader_token_stream(
                     list_nested_ident.clone(),
-                    quote! {#list_nested_ident},
+                    quote::quote! {#list_nested_ident},
                     path.clone(),
                     list_nested_ident.clone(),
                 );
-                quote! {
+                quote::quote! {
                     #nested_ident.nested.iter().map(|meta_nested_meta| {
                         match &meta_nested_meta {
                             #pattern => #reader,
@@ -240,16 +242,16 @@ impl Type {
                 }
             }
             Type::Map(ty) => {
-                let result_type = ty.get_token_stream();
+                let result_type = ty.get_type_token_stream();
                 let map_nested_ident = format_ident! {"map_{}", nested_ident};
                 let pattern = ty.get_nested_pattern(true, map_nested_ident.clone());
                 let reader = ty.get_lit_reader_token_stream(
                     map_nested_ident.clone(),
-                    quote! { #map_nested_ident.lit },
+                    quote::quote! { #map_nested_ident.lit },
                     path.clone(),
                     map_nested_ident.clone(),
                 );
-                quote! {
+                quote::quote! {
                     {
                         let value_pairs: Result<Vec<(String, #result_type)>, syn::Error> =
                             #nested_ident.nested.iter().map(|meta_nested_meta| {
@@ -285,13 +287,156 @@ impl Type {
 
     pub fn get_path_ident(&self, nested_ident: Ident) -> TokenStream {
         match self {
-            Type::Object(_) => quote! {
+            Type::Object(_) => quote::quote! {
                 (match &#nested_ident {
                     syn::Meta::List(object_meta_list) => Ok(&object_meta_list.path),
                     _ => Err(syn::Error::new_spanned(&#nested_ident, "Nested value must be List"))
                 }?)
             },
-            _ => quote! {#nested_ident.path},
+            _ => quote::quote! {#nested_ident.path},
+        }
+    }
+
+    pub fn to_token_token_stream(&self, value: TokenStream, value_name: Ident, is_option: bool) -> TokenStream {
+        match self {
+            Type::List(nested_type_box) => {
+                let nested_type = nested_type_box.as_ref();
+                let nested_value_token = nested_type.to_token_token_stream(
+                    quote::quote! { nested_value },
+                    format_ident!("{}_nested", value_name),
+                    false
+                );
+                let temp_value_name = format_ident!("nested_value_tokens_{}", value_name);
+                let temp_value_name_string = temp_value_name.to_string().clone();
+                let nested_value_tokens_interpolated = InterpolatedList::new(
+                    temp_value_name_string.as_str(),
+                    Some(',')
+                );
+
+                match is_option {
+                    true => quote::quote!{
+                        match &#value {
+                            Some(value) => {{
+                                let #temp_value_name: Vec<proc_macro2::TokenStream> = value.iter().map(
+                                    |nested_value| {
+                                        #nested_value_token
+                                    }
+                                ).collect();
+                                quote::quote!{Some(vec![#nested_value_tokens_interpolated])}
+                            }},
+                            None => quote::quote!{ None }
+                        }
+
+                    },
+                    false => quote::quote!{{
+                        let #temp_value_name: Vec<proc_macro2::TokenStream> = #value.iter().map(
+                            |nested_value| {
+                                #nested_value_token
+                            }
+                        ).collect();
+
+                        quote::quote!{vec![#nested_value_tokens_interpolated]}
+                    }}
+                }
+            },
+            Type::Map(nested_type_box) => {
+                let nested_type = nested_type_box.as_ref();
+                let nested_value_tokens = nested_type.to_token_token_stream(
+                    quote::quote! { nested_value },
+                    format_ident!("{}_nested", value_name),
+                    false
+                );
+                let key_interpolated = Interpolated::new("key");
+
+                let temp_value_name = format_ident!("nested_value_tokens_{}", value_name);
+                let temp_value_name_string = temp_value_name.to_string().clone();
+                let temp_value_name_interpolated = InterpolatedList::new(
+                    temp_value_name_string.as_str(),
+                    Some(',')
+                );
+
+                match is_option {
+                    true => quote::quote! {
+                        match &#value {
+                            Some(value) => {
+                                let #temp_value_name: Vec<proc_macro2::TokenStream> = value.iter().map(
+                                    |(key, nested_value)| {
+                                        let nested_value_token = #nested_value_tokens;
+                                        quote::quote! {
+                                            (#key_interpolated, #nested_value_tokens)
+                                        }
+                                    }
+                                ).collect();
+
+                                quote::quote! {
+                                    Some([
+                                        #temp_value_name_interpolated
+                                    ]..iter().cloned().collect())
+                                }
+                            },
+                            None => quote::quote!{ None }
+                        }
+                    },
+                    false => quote::quote! {{
+                        let #temp_value_name: Vec<proc_macro2::TokenStream> = #value.iter().map(
+                            |(key, nested_value)| {
+                                let nested_value_token = #nested_value_tokens;
+                                quote::quote! {
+                                    (#key_interpolated, #nested_value_tokens)
+                                }
+                            }
+                        ).collect();
+
+                        quote::quote! {
+                            [
+                                #temp_value_name_interpolated
+                            ]..iter().cloned().collect()
+                        }
+                    }}
+                }
+            }
+            Type::String => {
+                let temp_value = format_ident!("temp_value_{}", value_name);
+                let temp_value_string = temp_value.to_string().clone();
+                let temp_value_interpolated = Interpolated::new(
+                    temp_value_string.as_str()
+                );
+                let value_interpolated = Interpolated::new("value");
+
+                match is_option {
+                    true => quote::quote! {
+                        match &#value {
+                            Some(value) => quote::quote! {Some(String::from(#value_interpolated))},
+                            None => quote::quote!{None}
+                        }
+                    },
+                    false => quote::quote! {{
+                        let #temp_value = #value;
+                        quote::quote! {String::from(#temp_value_interpolated)}
+                    }}
+                }
+            },
+            _ => {
+                let temp_value = format_ident!("temp_value_{}", value_name);
+                let temp_value_string = temp_value.to_string().clone();
+                let temp_value_interpolated = Interpolated::new(
+                    temp_value_string.as_str()
+                );
+                let value_interpolated = Interpolated::new("value");
+
+                match is_option {
+                    true => quote::quote! {
+                        match &#value {
+                            Some(value) => quote::quote! {Some(#value_interpolated)},
+                            None => quote::quote!{None}
+                        }
+                    },
+                    false => quote::quote! {{
+                        let #temp_value = #value;
+                        quote::quote! {#temp_value_interpolated}
+                    }}
+                }
+            }
         }
     }
 }
@@ -355,6 +500,14 @@ impl FieldType {
                 type_path, is_enum,
             )?)),
         }
+    }
+
+    pub fn to_token_token_stream(&self, value: TokenStream, value_name: Ident) -> TokenStream {
+        self.unwrap().to_token_token_stream(
+            value,
+            value_name,
+            !self.is_required()
+        )
     }
 }
 

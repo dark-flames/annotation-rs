@@ -3,7 +3,7 @@ use syn::parse::{Parse, ParseBuffer};
 use syn::{AttributeArgs, DeriveInput, Error, Meta};
 
 pub trait AttributeStructure {
-    fn get_path() -> Symbol;
+    fn get_path() -> Symbol where Self: Sized;
 
     fn from_meta(input: &Meta) -> Result<Self, syn::Error>
     where
@@ -14,11 +14,11 @@ pub trait AttributeStructure {
         Self: std::marker::Sized;
 }
 
-pub struct Attributes<T: AttributeStructure> {
+pub struct AttributeStructures<T: AttributeStructure> {
     pub attrs: Vec<T>,
 }
 
-impl<T: AttributeStructure> Attributes<T> {
+impl<T: AttributeStructure> AttributeStructures<T> {
     pub fn from_derive_input(derive_input: DeriveInput) -> Result<Self, Error> {
         let attributes: Vec<T> = derive_input
             .attrs
@@ -29,14 +29,13 @@ impl<T: AttributeStructure> Attributes<T> {
             })
             .collect::<Result<Vec<T>, Error>>()?;
 
-        Ok(Attributes { attrs: attributes })
+        Ok(AttributeStructures { attrs: attributes })
     }
 }
 
-impl<T: AttributeStructure> Parse for Attributes<T> {
+impl<T: AttributeStructure> Parse for AttributeStructures<T> {
     fn parse(input: &ParseBuffer) -> Result<Self, Error> {
         let derive_input = DeriveInput::parse(&input)?;
-
         Self::from_derive_input(derive_input)
     }
 }

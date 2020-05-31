@@ -2,8 +2,7 @@ use crate::field::Fields;
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use syn::{Data, DeriveInput, Error, Ident, Meta, NestedMeta};
-use yui_internal::{get_lit_str, unwrap_punctuated_first, Symbol};
+use syn::{Data, DeriveInput, Error, Ident};
 
 pub struct Attribute {
     ident: Ident,
@@ -15,29 +14,7 @@ impl Attribute {
     pub fn from_ast(input: &DeriveInput) -> Result<Self, Error> {
         match &input.data {
             Data::Struct(data_struct) => {
-                let mut path = input.ident.to_string().clone();
-
-                if !input.attrs.is_empty() {
-                    for attr in &input.attrs {
-                        if attr.path == Symbol::new("attribute") {
-                            path = match attr.parse_meta()? {
-                                Meta::List(list) => match unwrap_punctuated_first(
-                                    &list.nested,
-                                    Error::new_spanned(&list, "Unexpected nested meta"),
-                                )? {
-                                    NestedMeta::Lit(lit) => {
-                                        get_lit_str(&lit, &attr.path.get_ident().unwrap())
-                                    }
-                                    _ => Err(Error::new_spanned(
-                                        attr,
-                                        "Meta of Attribute must be Lit List",
-                                    )),
-                                },
-                                meta => Err(Error::new_spanned(&meta, "Unexpected attribute")),
-                            }?
-                        }
-                    }
-                }
+                let path = input.ident.to_string().clone();
 
                 Ok(Attribute {
                     ident: input.ident.clone(),
@@ -56,6 +33,8 @@ impl Attribute {
             .parse_attributes_args_token_stream(format_ident!("input"), name.clone());
         let from_meta = self.fields.parse_meta_token_stream(name.clone());
         let path = self.path.clone();
+        let to_token_temp_value = self.fields.get_to_token_temp_value_token_stream();
+        let to_token = self.fields.get_to_token_token_stream(name.clone());
 
         quote! {
             impl yui::AttributeStructure for #name {
@@ -84,6 +63,19 @@ impl Attribute {
 
                     Self::from_attribute_args(attribute_args)
                 }
+            }
+
+            impl quote::ToTokens for #name {
+                 fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+                    use quote::TokenStreamExt;
+                    #(#to_token_temp_value;)*
+                    tokens.append(proc_macro2::Group::new(
+                        proc_macro2::Delimiter::Brace,
+                        quote::quote! {
+                            #to_token
+                        },
+                    ))
+                 }
             }
         }
     }
