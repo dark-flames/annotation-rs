@@ -354,6 +354,7 @@ impl Type {
                     temp_value_name_string.as_str(),
                     Some(',')
                 );
+                let nested_value_token_interpolated = Interpolated::new("nested_value_token");
 
                 match is_option {
                     true => quote::quote! {
@@ -363,7 +364,7 @@ impl Type {
                                     |(key, nested_value)| {
                                         let nested_value_token = #nested_value_tokens;
                                         quote::quote! {
-                                            (#key_interpolated, #nested_value_tokens)
+                                            (#key_interpolated, #nested_value_token_interpolated)
                                         }
                                     }
                                 ).collect();
@@ -382,7 +383,7 @@ impl Type {
                             |(key, nested_value)| {
                                 let nested_value_token = #nested_value_tokens;
                                 quote::quote! {
-                                    (#key_interpolated, #nested_value_tokens)
+                                    (String::from(#key_interpolated), #nested_value_token_interpolated)
                                 }
                             }
                         ).collect();
@@ -390,7 +391,7 @@ impl Type {
                         quote::quote! {
                             [
                                 #temp_value_name_interpolated
-                            ]..iter().cloned().collect()
+                            ].iter().cloned().collect()
                         }
                     }}
                 }

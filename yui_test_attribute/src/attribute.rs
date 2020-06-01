@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use yui::{AttributeStructure, YuiAttribute};
 
-//#[derive(YuiAttribute, Clone)]
+#[derive(YuiAttribute, Clone)]
 pub struct NoField;
 
 #[derive(YuiAttribute, Clone)]
@@ -20,14 +20,13 @@ pub struct Simple {
     pub enum2: TestEnum,
 }
 
-
 //#[derive(YuiAttribute, Clone)]
-pub struct TestTuple(i32, Option<String>);
+pub struct Tuple(i32, Option<String>);
 
-//#[derive(YuiAttribute, Clone)]
-pub struct TestStruct {
+#[derive(YuiAttribute, Clone)]
+pub struct Full {
     pub object: Simple,
     pub vector: Vec<String>,
-    //#[attribute_field(enum_value = true)]
+    #[attribute_field(enum_value = true)]
     pub map: HashMap<String, TestEnum>,
 }
