@@ -20,3 +20,6 @@ yui_derive = { version = "0.1", path = "../yui_derive" }
 version = "0.1"
 path = "../yui_internal"
 
+[features]
+generate-reader=[]
+

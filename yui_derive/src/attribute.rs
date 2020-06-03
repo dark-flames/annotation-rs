@@ -14,7 +14,7 @@ impl Attribute {
     pub fn from_ast(input: &DeriveInput) -> Result<Self, Error> {
         match &input.data {
             Data::Struct(data_struct) => {
-                let path = input.ident.to_string().clone();
+                let path = input.ident.to_string();
 
                 Ok(Attribute {
                     ident: input.ident.clone(),

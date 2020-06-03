@@ -12,6 +12,7 @@ edition = "2018"
 [dependencies.yui]
 version = "0.1.0"
 path = "../yui"
+features = ["generate-reader"]
 
 [dependencies.yui_test_attribute]
 version = "0.1.0"

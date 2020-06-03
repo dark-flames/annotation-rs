@@ -329,9 +329,9 @@ impl GetAttributeParam {
             match &self.property {
                 Some(prop) => {
                     let prop_str = prop.to_string().to_lowercase();
-                    format_ident!("{}_{}", prop_str, attr_str)
+                    format!("{}_{}", prop_str, attr_str)
                 }
-                None => format_ident!("{}", attr_str),
+                None => format!("{}", attr_str),
             }
         );
         let class = &self.class;
@@ -350,9 +350,9 @@ impl GetAttributeParam {
             match &self.property {
                 Some(prop) => {
                     let prop_str = prop.to_string().to_uppercase();
-                    format_ident!("{}_", prop_str)
+                    format!("{}_", prop_str)
                 }
-                None => format_ident!(""),
+                None => format!(""),
             }
         );
         let attr_str = self.attribute.to_string();
