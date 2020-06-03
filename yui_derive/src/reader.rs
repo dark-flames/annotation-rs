@@ -335,8 +335,12 @@ impl GetAttributeParam {
             }
         );
         let class = &self.class;
+        let has_attr = self.has_attribute();
         quote::quote! {
-            #class::#fn_name()
+            match #has_attr {
+                true => Some(#class::#fn_name()),
+                false => None
+            }
         }
     }
 

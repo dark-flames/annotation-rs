@@ -10,7 +10,7 @@ struct Test;
 
 #[test]
 pub fn simple_test() {
-    let attr: Simple = get_attribute!(Test, Simple);
+    let attr: Simple = get_attribute!(Test, Simple).unwrap();
     assert_eq!(attr.int32, 1);
     assert_eq!(attr.unsigned16, 2);
     assert_eq!(attr.float, 1.1);

@@ -16,7 +16,7 @@ struct Test;
 
 #[test]
 pub fn test_full() {
-    let attr: Full = get_attribute!(Test, Full);
+    let attr: Full = get_attribute!(Test, Full).unwrap();
     let simple = attr.object;
     assert_eq!(simple.int32, 1);
     assert_eq!(simple.unsigned16, 2);
