@@ -11,7 +11,6 @@ use yui_test_attribute::enums::TestEnum;
     object(i32 = 1, u16 = 2, float = 1.1, string = "test", enum2 = "aaa"),
     vector("1", "2", "3"),
     map(a="aaa", b="variant_b", c="variant_c")
-
 )]
 struct Test;
 
