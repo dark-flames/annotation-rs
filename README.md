@@ -94,7 +94,7 @@ enum SomeEnum {
 ```
 And then, the enum can be used to a field type.
 * `variant_value` attribute\
-    Custom a corresponding value to variant(default is the snake case of variant name in Rust), it can be a number , string or boolean value.
+    Custom a string corresponding value to variant(default is the snake case of variant name in Rust).
 ```rust
 use yui::YuiEnumValue;
 
