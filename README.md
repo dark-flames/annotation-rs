@@ -121,7 +121,7 @@ generated_reader!(
 The macro will generate a public derive, it can be use to read attributes of `struct` ,`enum` or `union`, and record the metadata by generate `impl` block.
 
 ### Read attributes
-Use the generated derive macro on a struct, and you can use the macro: `has_attribute` and `get_attribute`to process attribute of the struct.
+Use the generated derive macro on a struct, and you can use the macro `has_attribute` and `get_attribute`to process attributes of the struct.
 ```rust
 use yui::{get_attribute, has_attribute};
 
