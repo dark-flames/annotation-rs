@@ -46,6 +46,7 @@ enum SomeEnum {
     B
 }
 
+#[derive(YuiAttribute)]
 struct Foo {
     pub string: String,
     pub bool: bool,
