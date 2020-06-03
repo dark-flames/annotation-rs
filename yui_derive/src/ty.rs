@@ -51,7 +51,7 @@ impl Type {
                             Type::Object(_) | Type::Map(_) | Type::List(_) => {
                                 Err(Error::new_spanned(
                                     segment,
-                                    "Vec can not nest Object, HashMap or Vec",
+                                    "Vec can not nest Object, Map or List",
                                 ))
                             }
                             _ => Ok(Type::List(nested_type)),
