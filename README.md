@@ -111,15 +111,13 @@ Macro `generate_reader` is used to generate a derive macro.
 use yui::generate_reader;
 
 generated_reader!(
-    pub MyDerive,
+    MyDerive,
     [StructAttribute1, StructAttribute2],
     [FieldAttribute1, FieldAttribute2]
 );
 
 ```
-The macro will generate a derive, it can be use to read attributes of `struct` ,`enum` or `union`, and record the metadata by generate `impl` block.
-* visibility\
-add `pub`in derive name to make the derive macro public.
+The macro will generate a public derive, it can be use to read attributes of `struct` ,`enum` or `union`, and record the metadata by generate `impl` block.
 
 ### Read attributes
 Use the generated derive macro on a struct, and you can use the macro: `has_attribute` and `get_attribute`to process attribute of the struct.
