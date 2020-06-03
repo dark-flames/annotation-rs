@@ -31,8 +31,6 @@ pub fn derive_attribute(input: TokenStream) -> TokenStream {
 
     let attribute = Attribute::from_ast(&input);
 
-    //panic!(attribute.unwrap().get_implement().to_string());
-
     TokenStream::from(match attribute {
         Ok(value) => value.get_implement(),
         Err(e) => e.to_compile_error(),
