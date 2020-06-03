@@ -9,7 +9,6 @@ edition = "2018"
 [dependencies.yui]
 version = "0.1.0"
 path = "../yui"
-features = ["derive"]
 
 [dependencies.syn]
 version = "1.0"

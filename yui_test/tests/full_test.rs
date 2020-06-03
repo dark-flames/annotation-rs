@@ -4,7 +4,6 @@ use yui_test::FullDerive;
 use yui_test_attribute::attribute::Simple;
 use yui_test_attribute::attribute::Full;
 use yui_test_attribute::enums::TestEnum;
-use std::iter::FromIterator;
 
 
 #[derive(FullDerive)]

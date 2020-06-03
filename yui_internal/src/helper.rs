@@ -68,6 +68,7 @@ pub fn get_lit_str<U: Display>(lit: &Lit, ident: &U) -> Result<String, Error> {
     }
 }
 
+#[inline]
 pub fn get_lit_as_string<U: Display>(lit: &Lit, ident: &U) -> Result<String, Error> {
     match lit {
         Lit::Str(lit_str) => Ok(lit_str.value()),
