@@ -71,7 +71,7 @@ struct Foo {
     }
     ```
 * `default`\
-    Set the default value for this field. If the value is not present when parsing, the default value will be set to the field, even the field is optional.`Object`, `Vec`, `HashMap` field can`t have default value.
+    Set the default value for this field. If the value is not present when parsing, the default value will be set to the field, even the field is optional.`Object`, `Vec` or `HashMap` fields can`t have default value.
     ```rust
     #[derive(YuiAttribute)]
     struct Fool {
@@ -93,9 +93,9 @@ enum SomeEnum {
     B
 }
 ```
-And then, the enum can be used to a field type.
+And then, the enum can be used as a field type.
 * `variant_value` attribute\
-    Custom a string corresponding value to variant(default is the snake case of variant name in Rust).
+    Customize a string corresponding value to variant(default is the snake case of variant name in Rust).
 ```rust
 use yui::YuiEnumValue;
 
