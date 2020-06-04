@@ -114,8 +114,21 @@ let attributes = syn::parse_macro_inpit!(input as yui::AttributeStructs<Fool>);
 If you want to parse attribute from `syn::Meta`, use `yui::AttributeStruct::from_meta()`.\
 And attribute structure with value can be convert to token automatically. But the visibility of each field must be public.
 ```rust
-quote::quote! {
-    #attribute_filed
+#[derive(YuiAttribute, Clone)]
+struct Fool {
+    #[attribute_field(default = 1024)]
+    pub int32: i32
+}
+
+fn derive_fn(input: TokenStream) -> TokenStream {
+    let attributes = syn::parse_macro_inpit!(input as yui::AttributeStructs<Fool>);
+    let attrs = attributes.attrs;
+
+    quote::quote! {
+        fn get_attrs() -> Vec<Fool> {
+            vec![#(#attrs),*]
+        }
+    }
 }
 ```
 
