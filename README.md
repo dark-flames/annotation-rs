@@ -107,9 +107,9 @@ enum SomeEnum {
 }
 ```   
 ### Parse attributes with `syn`and`quote`
-`yui::AttributeStructs` can be used in `parse_macro_input!`
+`yui::AttributeStructs<T>` can be used in `parse_macro_input!`
 ```rust
-let attributes = syn::parse_macro_inpit!(input as yui::AttributeStructs);
+let attributes = syn::parse_macro_inpit!(input as yui::AttributeStructs<Fool>);
 ```
 If you want to parse attribute from `syn::Meta`, use `yui::AttributeStruct::from_meta()`.\
 And attribute structure with value can be convert to token automatically. But the visibility of each field must be public.

@@ -5,7 +5,6 @@ use yui_test_attribute::attribute::Simple;
 use yui_test_attribute::attribute::Full;
 use yui_test_attribute::enums::TestEnum;
 
-
 #[derive(FullDerive)]
 #[Full(
     object(i32 = 1, u16 = 2, float = 1.1, string = "test", enum2 = "aaa"),
