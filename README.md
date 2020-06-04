@@ -31,7 +31,7 @@ struct Struct {
 * Object: other attribute structure.
 * Enum: defined enum, remember to use `enum_value=true`option.
 * Vec<T>: Vec of T(T can`t be Object, Vec or HashMap).
-* HashMap<string, T>: HashMap of T mapping by string key.
+* HashMap<String, T>: HashMap of T mapping by `String` Skey.
 If you want to make a field optional, use `Option<T>` on the field type.
 
 ```rust
