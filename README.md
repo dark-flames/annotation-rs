@@ -106,7 +106,21 @@ enum SomeEnum {
     B
 }
 ```   
+### Parse attributes with `syn`and`quote`
+`yui::AttributeStructs` can be used in `parse_macro_input!`
+```rust
+let attributes = syn::parse_macro_inpit!(input as yui::AttributeStructs);
+```
+If you want to parse attribute from `syn::Meta`, use `yui::AttributeStruct::from_meta()`.\
+And attribute structure with value can be convert to token automatically. But the visibility of each field must be public.
+```rust
+quote::quote! {
+    #attribute_filed
+}
+```
+
 ### Generate derive macro
+If you want to use builtin reader generator, enable `generate-reader` feature.
 Macro `generate_reader` is used to generate a derive macro.
 ```rust
 use yui::generate_reader;
@@ -137,19 +151,6 @@ fn some_fn() {
     assert!(has_attribute(Foo::field, FieldAttribute1));
     let struct_attr1: Option<StructAttribute1> = get_attribute!(Fool, StructAttribute1);
     let field_attr1: Option<StructAttribute1> = get_attribute!(Fool::field, StructAttribute1);
-}
-```
-
-### Parse attributes with `syn`and`quote`
-`yui::AttributeStructs` can be used in `parse_macro_input!`
-```rust
-let attributes = syn::parse_macro_inpit!(input as yui::AttributeStructs`);
-```
-If you want to parse attribute from `syn::Meta`, use `yui::AttributeStruct::from_meta()`.\
-And attribute structure with value can be convert to token automatically. But the visibility of each field must be public.
-```rust
-quote::quote! {
-    #attribute_filed
 }
 ```
 
