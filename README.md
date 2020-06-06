@@ -123,7 +123,7 @@ struct Fool {
 }
 
 fn derive_fn(input: TokenStream) -> TokenStream {
-    let attributes = syn::parse_macro_inpit!(input as yui::AttributeStructs<Fool>);
+    let attributes = syn::parse_macro_input!(input as yui::AttributeStructs<Fool>);
     let attrs = attributes.attrs;
 
     TokenStream::from(quote::quote! {

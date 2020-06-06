@@ -1,7 +1,7 @@
 use crate::enums::TestEnum;
 use std::collections::HashMap;
 
-use yui::{AttributeStructure, YuiAttribute};
+use yui::{YuiAttribute};
 
 #[derive(YuiAttribute, Clone)]
 pub struct NoField;

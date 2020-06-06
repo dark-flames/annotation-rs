@@ -60,7 +60,7 @@ impl Attribute {
             impl syn::parse_macro_input::ParseMacroInput for #name {
                 fn parse(input: syn::parse::ParseStream) -> Result<Self, syn::Error> {
                     let attribute_args = syn::AttributeArgs::parse(input)?;
-
+                    use yui::AttributeStructure;
                     Self::from_attribute_args(attribute_args)
                 }
             }
@@ -68,6 +68,7 @@ impl Attribute {
             impl quote::ToTokens for #name {
                  fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
                     use quote::TokenStreamExt;
+                    use yui::AttributeStructure;
                     #(#to_token_temp_value;)*
                     tokens.append(proc_macro2::Group::new(
                         proc_macro2::Delimiter::Brace,
