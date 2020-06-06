@@ -1,6 +1,6 @@
 # Yui
 
-Yui is an attribute reader generator for Rust.
+Yui is an attribute reader for Rust.
 
 ## Features
 
