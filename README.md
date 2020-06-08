@@ -65,7 +65,7 @@ struct Foo {
     Generated reader will parse the field with the given name instead of its field name in Rust.
     ```rust
     #[derive(YuiAttribute)]
-    struct Fool {
+    struct Foo {
         #[attribute_field(alias = "i32")]
         pub int32: i32,
     }
@@ -74,7 +74,7 @@ struct Foo {
     Set the default value for this field. If the value is not present when parsing, the default value will be set to the field, even the field is optional.`Object`, `Vec` or `HashMap` fields can`t have default value.
     ```rust
     #[derive(YuiAttribute)]
-    struct Fool {
+    struct Foo {
         #[attribute_field(default = 1024)]
         pub int32: i32
     }
@@ -109,7 +109,7 @@ enum SomeEnum {
 ### Parse attributes with `syn`and`quote`
 `yui::AttributeStructs<T>` can be used in `parse_macro_input!`
 ```rust
-let attributes = syn::parse_macro_inpit!(input as yui::AttributeStructs<Fool>);
+let attributes = syn::parse_macro_inpit!(input as yui::AttributeStructs<Foo>);
 ```
 If you want to parse attribute from `syn::Meta`, use `yui::AttributeStruct::from_meta()`.\
 And attribute structure with value can be convert to token automatically. But the visibility of each field must be public.
@@ -117,17 +117,17 @@ And attribute structure with value can be convert to token automatically. But th
 use proc_macro::TokenStream;
 
 #[derive(YuiAttribute)]
-struct Fool {
+struct Foo {
     #[attribute_field(default = 1024)]
     pub int32: i32
 }
 
 fn derive_fn(input: TokenStream) -> TokenStream {
-    let attributes = syn::parse_macro_input!(input as yui::AttributeStructs<Fool>);
+    let attributes = syn::parse_macro_input!(input as yui::AttributeStructs<Foo>);
     let attrs = attributes.attrs;
 
     TokenStream::from(quote::quote! {
-        fn get_attrs() -> Vec<Fool> {
+        fn get_attrs() -> Vec<Foo> {
             vec![#(#attrs),*]
         }
     })
@@ -164,8 +164,8 @@ struct Foo {
 fn some_fn() {
     assert!(has_attribute(Foo, StructAttribute1));
     assert!(has_attribute(Foo::field, FieldAttribute1));
-    let struct_attr1: Option<StructAttribute1> = get_attribute!(Fool, StructAttribute1);
-    let field_attr1: Option<StructAttribute1> = get_attribute!(Fool::field, StructAttribute1);
+    let struct_attr1: Option<StructAttribute1> = get_attribute!(Foo, StructAttribute1);
+    let field_attr1: Option<StructAttribute1> = get_attribute!(Foo::field, StructAttribute1);
 }
 ```
 
