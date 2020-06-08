@@ -162,8 +162,8 @@ struct Foo {
 }
 
 fn some_fn() {
-    assert!(has_attribute(Foo, StructAttribute1));
-    assert!(has_attribute(Foo::field, FieldAttribute1));
+    assert!(has_attribute!(Foo, StructAttribute1));
+    assert!(has_attribute!(Foo::field, FieldAttribute1));
     let struct_attr1: Option<StructAttribute1> = get_attribute!(Foo, StructAttribute1);
     let field_attr1: Option<StructAttribute1> = get_attribute!(Foo::field, StructAttribute1);
 }

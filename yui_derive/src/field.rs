@@ -28,12 +28,12 @@ trait ValuedField {
                     Meta::List(list) => {
                         for nested_item in &list.nested {
                             match nested_item {
-                                NestedMeta::Meta(Meta::NameValue(alias))
-                                    if (alias.path == Symbol::new("alias")) =>
+                                NestedMeta::Meta(Meta::NameValue(path))
+                                    if (path.path == Symbol::new("alias")) =>
                                 {
                                     attribute.path = Some(get_lit_str(
-                                        &alias.lit,
-                                        &alias.path.get_ident().unwrap(),
+                                        &path.lit,
+                                        &path.path.get_ident().unwrap(),
                                     )?);
                                 }
                                 NestedMeta::Meta(Meta::NameValue(enum_value))
