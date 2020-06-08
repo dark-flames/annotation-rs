@@ -8,9 +8,9 @@ pub struct NoField;
 
 #[derive(YuiAttribute, Clone)]
 pub struct Simple {
-    #[attribute_field(path = "i32")]
+    #[attribute_field(alias = "i32")]
     pub int32: i32,
-    #[attribute_field(path = "u16")]
+    #[attribute_field(alias = "u16")]
     pub unsigned16: u16,
     pub float: f32,
     pub string: String,

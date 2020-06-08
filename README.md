@@ -61,12 +61,12 @@ struct Foo {
 }
 ```
 #### Options
-* `path`\
+* `alias`\
     Generated reader will parse the field with the given name instead of its field name in Rust.
     ```rust
     #[derive(YuiAttribute)]
     struct Fool {
-        #[attribute_field(path = "i32")]
+        #[attribute_field(alias = "i32")]
         pub int32: i32,
     }
     ```
