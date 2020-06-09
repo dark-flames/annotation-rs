@@ -11,7 +11,7 @@ use crate::reader::Interpolated;
 
 struct FieldAttribute {
     pub path: Option<String>,
-    pub eum_value: Option<bool>,
+    pub enum_value: Option<bool>,
     pub default: Option<String>,
 }
 
@@ -19,7 +19,7 @@ trait ValuedField {
     fn get_attribute(attrs: &Vec<SynAttribute>) -> Result<FieldAttribute, Error> {
         let mut attribute = FieldAttribute {
             path: None,
-            eum_value: None,
+            enum_value: None,
             default: None,
         };
         for attr in attrs.iter() {
@@ -39,7 +39,7 @@ trait ValuedField {
                                 NestedMeta::Meta(Meta::NameValue(enum_value))
                                     if (enum_value.path == Symbol::new("enum_value")) =>
                                 {
-                                    attribute.eum_value = Some(get_lit_bool(
+                                    attribute.enum_value = Some(get_lit_bool(
                                         &enum_value.lit,
                                         &enum_value.path.get_ident().unwrap(),
                                     )?);
@@ -175,8 +175,8 @@ impl NamedField {
         }
 
         let mut is_enum = false;
-        if attribute.eum_value.is_some() {
-            is_enum = attribute.eum_value.unwrap()
+        if attribute.enum_value.is_some() {
+            is_enum = attribute.enum_value.unwrap()
         }
         let field_type = FieldType::from_ast(&input.ty, is_enum)?;
         let mut default: Option<DefaultValue> = None;
@@ -271,8 +271,8 @@ impl UnnamedFiled {
         let attribute = Self::get_attribute(&input.attrs)?;
 
         let mut is_enum = false;
-        if attribute.eum_value.is_some() {
-            is_enum = attribute.eum_value.unwrap()
+        if attribute.enum_value.is_some() {
+            is_enum = attribute.enum_value.unwrap()
         }
         let field_type = FieldType::from_ast(&input.ty, is_enum)?;
         let mut default: Option<DefaultValue> = None;
