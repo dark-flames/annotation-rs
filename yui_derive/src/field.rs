@@ -128,7 +128,7 @@ impl ValuedField for NamedField {
             .field_type
             .unwrap()
             .get_nested_pattern(true, nested_ident.clone());
-        let reader = self.field_type.unwrap().get_lit_reader_token_stream(
+        let reader = self.field_type.unwrap().get_lit_reader(
             nested_ident.clone(),
             quote::quote! { #nested_ident.lit },
             quote::quote! { String::from(#path_name) },
@@ -233,7 +233,7 @@ impl ValuedField for UnnamedFiled {
             },
         );
 
-        let reader = self.field_type.unwrap().get_lit_reader_token_stream(
+        let reader = self.field_type.unwrap().get_lit_reader(
             nested_ident.clone(),
             quote::quote! { #nested_ident },
             quote::quote! { String::from(#lit_name) },
@@ -319,6 +319,7 @@ impl Fields {
             SynFields::Unit => Ok(Fields::None),
         }
     }
+
     pub fn parse_attributes_args_token_stream(
         &self,
         attributes_args_ident: Ident,
@@ -444,7 +445,7 @@ impl Fields {
                 .map(|field| {
                     let value_name = field.get_temp_var_name();
                     let field_name = field.name.clone();
-                    let value_token = field.field_type.to_token_token_stream(
+                    let value_token = field.field_type.to_token(
                         quote::quote! {
                             self.#field_name.clone()
                         },
@@ -461,7 +462,7 @@ impl Fields {
                 .map(|field| {
                     let value_name = field.get_temp_var_name();
                     let index = field.index.clone();
-                    let value_token = field.field_type.to_token_token_stream(
+                    let value_token = field.field_type.to_token(
                         quote::quote! {
                             self.#index.clone()
                         },

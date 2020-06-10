@@ -46,7 +46,7 @@ impl EnumItem {
         Ok(EnumItem { ident, value })
     }
 
-    pub fn to_pattern_token_stream(&self, enum_name: &Ident) -> TokenStream {
+    pub fn to_pattern_arm(&self, enum_name: &Ident) -> TokenStream {
         let item_value = self.value.clone();
         let item_ident = &self.ident;
         quote! {
@@ -95,7 +95,7 @@ impl EnumValue {
         let arms: Vec<TokenStream> = self
             .items
             .iter()
-            .map(|item| item.to_pattern_token_stream(&self.ident))
+            .map(|item| item.to_pattern_arm(&self.ident))
             .collect();
 
         let to_token_arms: Vec<TokenStream> = self

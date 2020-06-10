@@ -14,10 +14,10 @@ pub use yui_derive::{generate_reader, __get_attribute, __has_attribute};
 #[cfg(any(feature="generate-reader"))]
 #[macro_export]
 macro_rules! get_attribute {
-    ($class: ident, $attr:ident) => {
+    ($class: ident, $attr: ident) => {
         $crate::__get_attribute!($class, $attr)
     };
-    ($class: ident :: $prop: ident, $attr:ident) => {
+    ($class: ident :: $prop: ident, $attr: ident) => {
         $crate::__get_attribute!($class, $attr, $prop)
     };
 }
@@ -25,10 +25,10 @@ macro_rules! get_attribute {
 #[cfg(any(feature="generate-reader"))]
 #[macro_export]
 macro_rules! has_attribute {
-    ($class: ident :: $prop: ident, $attr:ident) => {
+    ($class: ident :: $prop: ident, $attr: ident) => {
         $crate::__has_attribute!($class, $attr, $prop)
     };
-    ($class: ident, $attr:ident) => {
+    ($class: ident, $attr: ident) => {
         crate::__has_attribute!($class, $attr)
     };
 }

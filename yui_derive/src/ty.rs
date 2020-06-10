@@ -178,7 +178,7 @@ impl Type {
         }
     }
 
-    pub fn get_lit_reader_token_stream(
+    pub fn get_lit_reader(
         &self,
         nested_ident: Ident,
         nested_lit: TokenStream,
@@ -223,7 +223,7 @@ impl Type {
                 let result_type = ty.get_type_token_stream();
                 let list_nested_ident = format_ident! {"list_{}", nested_ident};
                 let pattern = ty.get_nested_pattern(false, list_nested_ident.clone());
-                let reader = ty.get_lit_reader_token_stream(
+                let reader = ty.get_lit_reader(
                     list_nested_ident.clone(),
                     quote::quote! {#list_nested_ident},
                     path.clone(),
@@ -245,7 +245,7 @@ impl Type {
                 let result_type = ty.get_type_token_stream();
                 let map_nested_ident = format_ident! {"map_{}", nested_ident};
                 let pattern = ty.get_nested_pattern(true, map_nested_ident.clone());
-                let reader = ty.get_lit_reader_token_stream(
+                let reader = ty.get_lit_reader(
                     map_nested_ident.clone(),
                     quote::quote! { #map_nested_ident.lit },
                     path.clone(),
@@ -297,11 +297,11 @@ impl Type {
         }
     }
 
-    pub fn to_token_token_stream(&self, value: TokenStream, value_name: Ident, is_option: bool) -> TokenStream {
+    pub fn to_token(&self, value: TokenStream, value_name: Ident, is_option: bool) -> TokenStream {
         match self {
             Type::List(nested_type_box) => {
                 let nested_type = nested_type_box.as_ref();
-                let nested_value_token = nested_type.to_token_token_stream(
+                let nested_value_token = nested_type.to_token(
                     quote::quote! { nested_value },
                     format_ident!("{}_nested", value_name),
                     false
@@ -341,7 +341,7 @@ impl Type {
             },
             Type::Map(nested_type_box) => {
                 let nested_type = nested_type_box.as_ref();
-                let nested_value_tokens = nested_type.to_token_token_stream(
+                let nested_value_tokens = nested_type.to_token(
                     quote::quote! { nested_value },
                     format_ident!("{}_nested", value_name),
                     false
@@ -503,8 +503,8 @@ impl FieldType {
         }
     }
 
-    pub fn to_token_token_stream(&self, value: TokenStream, value_name: Ident) -> TokenStream {
-        self.unwrap().to_token_token_stream(
+    pub fn to_token(&self, value: TokenStream, value_name: Ident) -> TokenStream {
+        self.unwrap().to_token(
             value,
             value_name,
             !self.is_required()
