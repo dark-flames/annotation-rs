@@ -27,6 +27,8 @@ version = "1.0"
 [dependencies.quote]
 version = "1.0"
 
+[dependencies.float-cmp]
+version = "0.8.0"
 
 [lib]
 proc-macro = true
