@@ -17,11 +17,6 @@ syn = { version = "1.0" }
 version = "0.1"
 path = "../yui_internal"
 
-[dev-dependencies.cargo-husky]
-version = "1.5.0"
-default-features = false
-features = ["run-cargo-test", "run-cargo-clippy"]
-
 [dev-dependencies]
 yui_derive = { version = "0.1", path = "../yui_derive" }
 
