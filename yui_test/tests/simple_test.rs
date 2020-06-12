@@ -14,7 +14,8 @@ pub fn simple_test() {
     let attr: Simple = get_attribute!(Test, Simple).unwrap();
     assert_eq!(attr.int32, 1);
     assert_eq!(attr.unsigned16, 2);
-    assert!(approx_eq!(f32, simple.float, 1.1));
+    let float = attr.float;
+    assert!(approx_eq!(f32, float, 1.1));
     assert_eq!(attr.string, "test");
     assert_eq!(attr.enum1, Some(TestEnum::VariantC));
     assert_eq!(attr.enum2, TestEnum::VariantA);
