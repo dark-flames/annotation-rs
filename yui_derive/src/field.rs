@@ -16,7 +16,7 @@ struct FieldAttribute {
 }
 
 trait ValuedField {
-    fn get_attribute(attrs: &Vec<SynAttribute>) -> Result<FieldAttribute, Error> {
+    fn get_attribute(attrs: &[SynAttribute]) -> Result<FieldAttribute, Error> {
         let mut attribute = FieldAttribute {
             path: None,
             enum_value: None,
@@ -123,7 +123,7 @@ impl ValuedField for NamedField {
     fn get_parse_token_stream(&self) -> TokenStream {
         let temp_var_name = self.get_temp_var_name();
         let path_name = self.path.as_str();
-        let nested_ident = format_ident!("nested_{}", temp_var_name.clone());
+        let nested_ident = format_ident!("nested_{}", temp_var_name);
         let nested_pattern = self
             .field_type
             .unwrap()
@@ -138,7 +138,7 @@ impl ValuedField for NamedField {
         let path_ident = self
             .field_type
             .unwrap()
-            .get_path_ident(nested_ident.clone());
+            .get_path_ident(nested_ident);
         quote::quote! {
             #nested_pattern if #path_ident == yui::Symbol::new(#path_name) => {
                 #temp_var_name = Some(#reader?);
@@ -182,7 +182,7 @@ impl NamedField {
         let mut default: Option<DefaultValue> = None;
         if attribute.default.is_some() {
             default = Some(DefaultValue::from_string(
-                attribute.default.unwrap().clone(),
+                attribute.default.unwrap(),
                 input,
                 &field_type.unwrap(),
             )?)
@@ -217,7 +217,7 @@ impl ValuedField for UnnamedFiled {
 
     fn get_parse_token_stream(&self) -> TokenStream {
         let temp_var_name = self.get_temp_var_name();
-        let nested_ident = format_ident!("nested_{}", temp_var_name.clone());
+        let nested_ident = format_ident!("nested_{}", temp_var_name);
         let nested_pattern = self
             .field_type
             .unwrap()
@@ -278,7 +278,7 @@ impl UnnamedFiled {
         let mut default: Option<DefaultValue> = None;
         if attribute.default.is_some() {
             default = Some(DefaultValue::from_string(
-                attribute.default.unwrap().clone(),
+                attribute.default.unwrap(),
                 input,
                 &field_type.unwrap(),
             )?)
@@ -461,7 +461,7 @@ impl Fields {
                 .iter()
                 .map(|field| {
                     let value_name = field.get_temp_var_name();
-                    let index = field.index.clone();
+                    let index = field.index;
                     let value_token = field.field_type.to_token(
                         quote::quote! {
                             self.#index.clone()

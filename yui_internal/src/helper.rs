@@ -24,10 +24,10 @@ pub fn get_nested_type<'a>(
         PathArguments::AngleBracketed(argument) => {
             match unwrap_punctuated_first(&argument.args, error.clone())? {
                 GenericArgument::Type(nested_type) => Ok(nested_type),
-                _ => Err(error.clone()),
+                _ => Err(error),
             }
         }
-        _ => Err(error.clone()),
+        _ => Err(error),
     }
 }
 
@@ -45,7 +45,7 @@ pub fn get_nested_types<'a>(
                 _ => Err(error.clone()),
             })
             .collect(),
-        _ => Err(error.clone()),
+        _ => Err(error),
     }
 }
 

@@ -4,6 +4,7 @@ use yui_test::FullDerive;
 use yui_test_attribute::attribute::Simple;
 use yui_test_attribute::attribute::Full;
 use yui_test_attribute::enums::TestEnum;
+use float_cmp::approx_eq;
 
 #[derive(FullDerive)]
 #[Full(
@@ -19,7 +20,7 @@ pub fn test_full() {
     let simple = attr.object;
     assert_eq!(simple.int32, 1);
     assert_eq!(simple.unsigned16, 2);
-    assert_eq!(simple.float, 1.1);
+    assert!(approx_eq!(f32, simple.float, 1.1));
     assert_eq!(simple.string, "test");
     assert_eq!(simple.enum1, Some(TestEnum::VariantC));
     assert_eq!(simple.enum2, TestEnum::VariantA);

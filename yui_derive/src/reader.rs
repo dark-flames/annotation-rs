@@ -49,7 +49,7 @@ impl ToTokens for InterpolatedList<'_> {
 type AttributeIdents = Punctuated<Ident, Token![,]>;
 
 pub fn idents_to_vec(idents: &AttributeIdents) -> Vec<Ident> {
-    idents.iter().map(|ident| ident.clone()).collect()
+    idents.iter().cloned().collect()
 }
 
 pub struct ReaderConfig {
@@ -93,12 +93,10 @@ impl ReaderConfig {
         let name = self.name.clone();
         let attributes_hash_set: HashSet<Ident> = [
             self.attr_idents
-                .iter()
-                .map(|ident| ident.clone())
+                .iter().cloned()
                 .collect::<Vec<Ident>>(),
             self.field_attr_idents
-                .iter()
-                .map(|ident| ident.clone())
+                .iter().cloned()
                 .collect::<Vec<Ident>>(),
         ]
         .concat()
@@ -331,7 +329,7 @@ impl GetAttributeParam {
                     let prop_str = prop.to_string().to_lowercase();
                     format!("{}_{}", prop_str, attr_str)
                 }
-                None => format!("{}", attr_str),
+                None => attr_str,
             }
         );
         let class = &self.class;

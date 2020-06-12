@@ -226,8 +226,8 @@ impl Type {
                 let reader = ty.get_lit_reader(
                     list_nested_ident.clone(),
                     quote::quote! {#list_nested_ident},
-                    path.clone(),
-                    list_nested_ident.clone(),
+                    path,
+                    list_nested_ident,
                 );
                 quote::quote! {
                     #nested_ident.nested.iter().map(|meta_nested_meta| {
@@ -248,7 +248,7 @@ impl Type {
                 let reader = ty.get_lit_reader(
                     map_nested_ident.clone(),
                     quote::quote! { #map_nested_ident.lit },
-                    path.clone(),
+                    path,
                     map_nested_ident.clone(),
                 );
                 quote::quote! {
@@ -307,7 +307,7 @@ impl Type {
                     false
                 );
                 let temp_value_name = format_ident!("nested_value_tokens_{}", value_name);
-                let temp_value_name_string = temp_value_name.to_string().clone();
+                let temp_value_name_string = temp_value_name.to_string();
                 let nested_value_tokens_interpolated = InterpolatedList::new(
                     temp_value_name_string.as_str(),
                     Some(',')
@@ -349,7 +349,7 @@ impl Type {
                 let key_interpolated = Interpolated::new("key");
 
                 let temp_value_name = format_ident!("nested_value_tokens_{}", value_name);
-                let temp_value_name_string = temp_value_name.to_string().clone();
+                let temp_value_name_string = temp_value_name.to_string();
                 let temp_value_name_interpolated = InterpolatedList::new(
                     temp_value_name_string.as_str(),
                     Some(',')
@@ -398,7 +398,7 @@ impl Type {
             }
             Type::String => {
                 let temp_value = format_ident!("temp_value_{}", value_name);
-                let temp_value_string = temp_value.to_string().clone();
+                let temp_value_string = temp_value.to_string();
                 let temp_value_interpolated = Interpolated::new(
                     temp_value_string.as_str()
                 );
@@ -419,7 +419,7 @@ impl Type {
             },
             _ => {
                 let temp_value = format_ident!("temp_value_{}", value_name);
-                let temp_value_string = temp_value.to_string().clone();
+                let temp_value_string = temp_value.to_string();
                 let temp_value_interpolated = Interpolated::new(
                     temp_value_string.as_str()
                 );
