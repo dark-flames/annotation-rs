@@ -33,6 +33,6 @@ jobs:
             override: true
       - uses: actions-rs/clippy-check@v1
         with:
-          token: ${{ secrets.REPO_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features
     
