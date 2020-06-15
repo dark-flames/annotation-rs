@@ -5,6 +5,9 @@ authors = ["dark-flames <dark_flames@outlook.com>"]
 license = "MIT OR Apache-2.0"
 description = "Internal functions, struct for derive in Yui"
 repository = "https://github.com/dark-flames/Yui/yu_internal"
+keywords = ["yui", "attribute", "reader"]
+readme = "crates-io.md"
+include = ["src/*.rs", "crates-io.md", "LICENSE-APACHE", "LICENSE-MIT"]
 edition = "2018"
 
 [dependencies.syn]
