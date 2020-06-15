@@ -14,6 +14,7 @@ edition = "2018"
 
 [dependencies.yui_internal]
 version = "0.1"
+path = "../yui_internal"
 
 [dependencies.syn]
 version = "1.0"
