@@ -1,6 +1,6 @@
 [package]
 name = "yui"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["dark-flames <dark_flames@outlook.com>"]
 license = "MIT OR Apache-2.0"
 description = "An attribute reader generator for Rust"
