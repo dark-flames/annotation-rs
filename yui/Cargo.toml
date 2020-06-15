@@ -13,15 +13,12 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-yui_derive = { version = "0.1.0", path = "../yui_derive" }
-syn = { version = "1.0" }
+yui_derive = "0.1.1"
+syn = "1.0"
 
 [dependencies.yui_internal]
 version = "0.1"
 path = "../yui_internal"
-
-[dev-dependencies]
-yui_derive = { version = "0.1", path = "../yui_derive" }
 
 
 [features]
