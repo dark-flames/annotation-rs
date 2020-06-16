@@ -20,8 +20,8 @@ pub struct Simple {
     pub enum2: TestEnum,
 }
 
-//#[derive(YuiAttribute, Clone)]
-pub struct Tuple(i32, Option<String>);
+#[derive(YuiAttribute, Clone)]
+pub struct Tuple(pub Option<String>);
 
 #[derive(YuiAttribute, Clone)]
 pub struct Full {
@@ -29,4 +29,8 @@ pub struct Full {
     pub vector: Vec<String>,
     #[attribute_field(enum_value = true)]
     pub map: HashMap<String, TestEnum>,
+    pub map2: HashMap<String, Tuple>,
+    #[attribute_field(enum_value = true)]
+    pub map3: HashMap<String, Vec<TestEnum>>
 }
+

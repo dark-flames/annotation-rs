@@ -1,8 +1,7 @@
 #![feature(proc_macro_hygiene)]
 use yui::get_attribute;
 use yui_test::FullDerive;
-use yui_test_attribute::attribute::Simple;
-use yui_test_attribute::attribute::Full;
+use yui_test_attribute::attribute::{Simple, Full, Tuple};
 use yui_test_attribute::enums::TestEnum;
 use float_cmp::approx_eq;
 
@@ -10,7 +9,9 @@ use float_cmp::approx_eq;
 #[Full(
     object(i32 = 1, u16 = 2, float = 1.1, string = "test", enum2 = "aaa"),
     vector("1", "2", "3"),
-    map(a="aaa", b="variant_b", c="variant_c")
+    map(a="aaa", b="variant_b", c="variant_c"),
+    map2(a("a"), b("b"), c("c")),
+    map3(a("aaa", "variant_b"), b("aaa"))
 )]
 struct Test;
 

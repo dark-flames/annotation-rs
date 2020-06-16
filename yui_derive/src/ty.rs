@@ -251,6 +251,11 @@ impl Type {
                     path,
                     map_nested_ident.clone(),
                 );
+
+                let path = match ty.as_ref() {
+                    Type::Object(_) => quote::quote! {&#map_nested_ident.path().segments},
+                    _ => quote::quote! {&#map_nested_ident.path.segments}
+                };
                 quote::quote! {
                     {
                         let value_pairs: Result<Vec<(String, #result_type)>, syn::Error> =
@@ -259,7 +264,7 @@ impl Type {
                                     #pattern => {
                                         Ok((
                                              format!("{}",yui::unwrap_punctuated_first(
-                                                    &#map_nested_ident.path.segments,
+                                                    #path,
                                                     syn::Error::new_spanned(
                                                         &#map_nested_ident,
                                                         "Unexpected type path segment"

@@ -4,7 +4,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident};
 use syn::{
     Attribute as SynAttribute, Error, Field as SynField, Fields as SynFields, Ident, Meta,
-    NestedMeta,
+    NestedMeta, Index
 };
 use yui_internal::{get_lit_as_string, get_lit_bool, get_lit_str, Symbol};
 use crate::reader::Interpolated;
@@ -351,12 +351,17 @@ impl Fields {
 
         let construct = self.construct_token_stream(name);
 
+        let index_value = match self {
+            Fields::UnnamedField(_) => quote::quote! {field_index},
+            _ => quote::quote! {_}
+        };
+
         match &self {
             Fields::NamedFields(_) | Fields::UnnamedField(_) => {
                 quote::quote! {
                     #(#temp_var_token_stream;)*
 
-                    for (field_index, nested) in #attributes_args_ident.iter().enumerate() {
+                    for (#index_value, nested) in #attributes_args_ident.iter().enumerate() {
                         match &nested {
                             #(#parse_token_stream),*
                             _ => {
@@ -461,7 +466,7 @@ impl Fields {
                 .iter()
                 .map(|field| {
                     let value_name = field.get_temp_var_name();
-                    let index = field.index;
+                    let index = Index::from(field.index);
                     let value_token = field.field_type.to_token(
                         quote::quote! {
                             self.#index.clone()
@@ -515,9 +520,9 @@ impl Fields {
                     })
                     .collect();
                 quote::quote! {
-                    #name {
+                    #name (
                         #(#field_tokens),*
-                    }
+                    )
                 }
             }
         }
