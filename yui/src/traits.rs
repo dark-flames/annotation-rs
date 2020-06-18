@@ -19,7 +19,7 @@ pub struct AttributeStructures<T: AttributeStructure> {
 }
 
 impl<T: AttributeStructure> AttributeStructures<T> {
-    pub fn from_derive_input(derive_input: DeriveInput) -> Result<Self, Error> {
+    pub fn from_derive_input(derive_input: &DeriveInput) -> Result<Self, Error> {
         let attributes: Vec<T> = derive_input
             .attrs
             .iter()
@@ -36,6 +36,6 @@ impl<T: AttributeStructure> AttributeStructures<T> {
 impl<T: AttributeStructure> Parse for AttributeStructures<T> {
     fn parse(input: &ParseBuffer) -> Result<Self, Error> {
         let derive_input = DeriveInput::parse(&input)?;
-        Self::from_derive_input(derive_input)
+        Self::from_derive_input(&derive_input)
     }
 }
