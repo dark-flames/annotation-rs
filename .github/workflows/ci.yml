@@ -19,8 +19,6 @@ jobs:
       - uses: actions/checkout@v2
       - uses: dtolnay/rust-toolchain@nightly
       - run: cargo test --all-features
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo test
 
   clippy:
     name: Clippy
@@ -37,11 +35,3 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features
-      - uses: actions-rs/toolchain@v1
-        with:
-            toolchain: stable
-            components: clippy
-            override: true
-      - uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
