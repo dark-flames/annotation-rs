@@ -29,9 +29,6 @@ version = "1.0"
 [dependencies.heck]
 version = "0.3.1"
 
-[dependencies.lazy_static]
- version = "1.4.0"
-
 [lib]
 proc-macro = true
 

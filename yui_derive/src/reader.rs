@@ -166,9 +166,9 @@ impl ReaderConfig {
                     |attr| -> Option<Result<proc_macro2::TokenStream, syn::Error>> {
                         let meta = attr.parse_meta();
 
-                        match meta {
+                        match &meta {
                             #(#attribute_matches,)*
-                            Err(e) => Some(Err(e)),
+                            Err(e) => Some(Err(e.clone())),
                             _ => None
                         }
                     }

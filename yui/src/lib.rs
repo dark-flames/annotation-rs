@@ -1,5 +1,3 @@
-#![feature(in_band_lifetimes)]
-
 mod traits;
 pub use traits::*;
 
@@ -29,6 +27,6 @@ macro_rules! has_attribute {
         $crate::__has_attribute!($class, $attr, $prop)
     };
     ($class: ident, $attr: ident) => {
-        crate::__has_attribute!($class, $attr)
+        $crate::__has_attribute!($class, $attr)
     };
 }

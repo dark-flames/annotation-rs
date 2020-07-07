@@ -151,7 +151,9 @@ The macro will generate a public derive, it can be use to read attributes of `st
 
 ### Read attributes
 Use the generated derive macro on a struct, and you can use the macro `has_attribute` and `get_attribute`to process attributes of the struct.
+The feature require nightly rustc because `proc_macro_hygiene` is required.
 ```rust
+#![feature(proc_macro_hygiene)]
 use yui::{get_attribute, has_attribute};
 
 #[derive(MyDerive)]
