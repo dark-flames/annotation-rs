@@ -1,11 +1,11 @@
+use super::reader::InterpolatedList;
 use proc_macro2::TokenStream;
-use quote::{format_ident};
+use quote::format_ident;
 use std::fmt;
 use syn::{Error, Field, Ident, PathSegment, Type as SynType, TypePath};
-use super::reader::InterpolatedList;
 
-use yui_internal::{get_nested_type, get_nested_types, unwrap_punctuated_first, unwrap_type_path};
 use crate::reader::Interpolated;
+use yui_internal::{get_nested_type, get_nested_types, unwrap_punctuated_first, unwrap_type_path};
 
 pub enum Type {
     String,
@@ -48,12 +48,9 @@ impl Type {
                     Some(&nested_type_path) => {
                         let nested_type = Box::new(Self::from_ast(nested_type_path, is_enum)?);
                         match *nested_type {
-                            Type::Object(_) | Type::Map(_) | Type::List(_) => {
-                                Err(Error::new_spanned(
-                                    segment,
-                                    "Vec can not nest Object, Map or List",
-                                ))
-                            }
+                            Type::Object(_) | Type::Map(_) | Type::List(_) => Err(
+                                Error::new_spanned(segment, "Vec can not nest Object, Map or List"),
+                            ),
                             _ => Ok(Type::List(nested_type)),
                         }
                     }
@@ -254,7 +251,7 @@ impl Type {
 
                 let path = match ty.as_ref() {
                     Type::Object(_) => quote::quote! {&#map_nested_ident.path().segments},
-                    _ => quote::quote! {&#map_nested_ident.path.segments}
+                    _ => quote::quote! {&#map_nested_ident.path.segments},
                 };
                 quote::quote! {
                     {
@@ -309,17 +306,15 @@ impl Type {
                 let nested_value_token = nested_type.to_token(
                     quote::quote! { nested_value },
                     format_ident!("{}_nested", value_name),
-                    false
+                    false,
                 );
                 let temp_value_name = format_ident!("nested_value_tokens_{}", value_name);
                 let temp_value_name_string = temp_value_name.to_string();
-                let nested_value_tokens_interpolated = InterpolatedList::new(
-                    temp_value_name_string.as_str(),
-                    Some(',')
-                );
+                let nested_value_tokens_interpolated =
+                    InterpolatedList::new(temp_value_name_string.as_str(), Some(','));
 
                 match is_option {
-                    true => quote::quote!{
+                    true => quote::quote! {
                         match &#value {
                             Some(value) => {{
                                 let #temp_value_name: Vec<proc_macro2::TokenStream> = value.iter().map(
@@ -333,7 +328,7 @@ impl Type {
                         }
 
                     },
-                    false => quote::quote!{{
+                    false => quote::quote! {{
                         let #temp_value_name: Vec<proc_macro2::TokenStream> = #value.iter().map(
                             |nested_value| {
                                 #nested_value_token
@@ -341,24 +336,22 @@ impl Type {
                         ).collect();
 
                         quote::quote!{vec![#nested_value_tokens_interpolated]}
-                    }}
+                    }},
                 }
-            },
+            }
             Type::Map(nested_type_box) => {
                 let nested_type = nested_type_box.as_ref();
                 let nested_value_tokens = nested_type.to_token(
                     quote::quote! { nested_value },
                     format_ident!("{}_nested", value_name),
-                    false
+                    false,
                 );
                 let key_interpolated = Interpolated::new("key");
 
                 let temp_value_name = format_ident!("nested_value_tokens_{}", value_name);
                 let temp_value_name_string = temp_value_name.to_string();
-                let temp_value_name_interpolated = InterpolatedList::new(
-                    temp_value_name_string.as_str(),
-                    Some(',')
-                );
+                let temp_value_name_interpolated =
+                    InterpolatedList::new(temp_value_name_string.as_str(), Some(','));
                 let nested_value_token_interpolated = Interpolated::new("nested_value_token");
 
                 match is_option {
@@ -398,15 +391,13 @@ impl Type {
                                 #temp_value_name_interpolated
                             ].iter().cloned().collect()
                         }
-                    }}
+                    }},
                 }
             }
             Type::String => {
                 let temp_value = format_ident!("temp_value_{}", value_name);
                 let temp_value_string = temp_value.to_string();
-                let temp_value_interpolated = Interpolated::new(
-                    temp_value_string.as_str()
-                );
+                let temp_value_interpolated = Interpolated::new(temp_value_string.as_str());
                 let value_interpolated = Interpolated::new("value");
 
                 match is_option {
@@ -419,15 +410,13 @@ impl Type {
                     false => quote::quote! {{
                         let #temp_value = #value;
                         quote::quote! {String::from(#temp_value_interpolated)}
-                    }}
+                    }},
                 }
-            },
+            }
             _ => {
                 let temp_value = format_ident!("temp_value_{}", value_name);
                 let temp_value_string = temp_value.to_string();
-                let temp_value_interpolated = Interpolated::new(
-                    temp_value_string.as_str()
-                );
+                let temp_value_interpolated = Interpolated::new(temp_value_string.as_str());
                 let value_interpolated = Interpolated::new("value");
 
                 match is_option {
@@ -440,7 +429,7 @@ impl Type {
                     false => quote::quote! {{
                         let #temp_value = #value;
                         quote::quote! {#temp_value_interpolated}
-                    }}
+                    }},
                 }
             }
         }
@@ -509,11 +498,8 @@ impl FieldType {
     }
 
     pub fn to_token(&self, value: TokenStream, value_name: Ident) -> TokenStream {
-        self.unwrap().to_token(
-            value,
-            value_name,
-            !self.is_required()
-        )
+        self.unwrap()
+            .to_token(value, value_name, !self.is_required())
     }
 }
 

@@ -1,13 +1,13 @@
 use super::ty::{DefaultValue, FieldType};
 
+use crate::reader::Interpolated;
 use proc_macro2::TokenStream;
-use quote::{format_ident};
+use quote::format_ident;
 use syn::{
-    Attribute as SynAttribute, Error, Field as SynField, Fields as SynFields, Ident, Meta,
-    NestedMeta, Index
+    Attribute as SynAttribute, Error, Field as SynField, Fields as SynFields, Ident, Index, Meta,
+    NestedMeta,
 };
 use yui_internal::{get_lit_as_string, get_lit_bool, get_lit_str, Symbol};
-use crate::reader::Interpolated;
 
 struct FieldAttribute {
     pub path: Option<String>,
@@ -135,10 +135,7 @@ impl ValuedField for NamedField {
             nested_ident.clone(),
         );
 
-        let path_ident = self
-            .field_type
-            .unwrap()
-            .get_path_ident(nested_ident);
+        let path_ident = self.field_type.unwrap().get_path_ident(nested_ident);
         quote::quote! {
             #nested_pattern if #path_ident == yui::Symbol::new(#path_name) => {
                 #temp_var_name = Some(#reader?);
@@ -353,7 +350,7 @@ impl Fields {
 
         let index_value = match self {
             Fields::UnnamedField(_) => quote::quote! {field_index},
-            _ => quote::quote! {_}
+            _ => quote::quote! {_},
         };
 
         match &self {
@@ -454,7 +451,7 @@ impl Fields {
                         quote::quote! {
                             self.#field_name.clone()
                         },
-                        value_name.clone()
+                        value_name.clone(),
                     );
 
                     quote::quote! {
@@ -471,7 +468,7 @@ impl Fields {
                         quote::quote! {
                             self.#index.clone()
                         },
-                        value_name.clone()
+                        value_name.clone(),
                     );
 
                     quote::quote! {

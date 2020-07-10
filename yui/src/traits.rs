@@ -3,7 +3,9 @@ use syn::parse::{Parse, ParseBuffer};
 use syn::{AttributeArgs, DeriveInput, Error, Meta};
 
 pub trait AttributeStructure {
-    fn get_path() -> Symbol where Self: Sized;
+    fn get_path() -> Symbol
+    where
+        Self: Sized;
 
     fn from_meta(input: &Meta) -> Result<Self, syn::Error>
     where

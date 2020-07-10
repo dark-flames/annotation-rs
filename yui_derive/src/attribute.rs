@@ -2,15 +2,15 @@ use crate::field::Fields;
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
+use syn::export::ToTokens;
 use syn::{Data, DeriveInput, Error, Ident};
 use yui_internal::get_mod_path;
-use syn::export::ToTokens;
 
 pub struct Attribute {
     ident: Ident,
     path: String,
     fields: Fields,
-    mod_path: Option<TokenStream>
+    mod_path: Option<TokenStream>,
 }
 
 impl Attribute {
@@ -23,7 +23,7 @@ impl Attribute {
                     ident: input.ident.clone(),
                     path,
                     fields: Fields::from_ast(&data_struct.fields)?,
-                    mod_path: get_mod_path(&input.attrs)?
+                    mod_path: get_mod_path(&input.attrs)?,
                 })
             }
             _ => Err(Error::new_spanned(&input, "Attribute must be a struct")),
@@ -42,7 +42,7 @@ impl Attribute {
             Some(path) => quote::quote! {
                 #path::#name
             },
-            None => name.to_token_stream()
+            None => name.to_token_stream(),
         };
         let to_token = self.fields.get_to_token_token_stream(struct_path);
 

@@ -92,11 +92,10 @@ impl ReaderConfig {
     fn get_attribute(&self) -> TokenStream {
         let name = self.name.clone();
         let attributes_hash_set: HashSet<Ident> = [
-            self.attr_idents
-                .iter().cloned()
-                .collect::<Vec<Ident>>(),
+            self.attr_idents.iter().cloned().collect::<Vec<Ident>>(),
             self.field_attr_idents
-                .iter().cloned()
+                .iter()
+                .cloned()
                 .collect::<Vec<Ident>>(),
         ]
         .concat()

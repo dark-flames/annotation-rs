@@ -2,7 +2,7 @@ use heck::SnakeCase;
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
 use syn::{Data, DeriveInput, Error, Meta, NestedMeta, Variant};
-use yui_internal::{get_lit_str, unwrap_punctuated_first, Symbol, get_mod_path};
+use yui_internal::{get_lit_str, get_mod_path, unwrap_punctuated_first, Symbol};
 
 pub struct EnumItem {
     ident: Ident,
@@ -65,7 +65,7 @@ impl EnumItem {
 pub struct EnumValue {
     ident: Ident,
     items: Vec<EnumItem>,
-    mod_path: Option<TokenStream>
+    mod_path: Option<TokenStream>,
 }
 
 impl EnumValue {
@@ -81,7 +81,7 @@ impl EnumValue {
                 Ok(EnumValue {
                     ident: input.ident.clone(),
                     items: items?,
-                    mod_path: get_mod_path(&input.attrs)?
+                    mod_path: get_mod_path(&input.attrs)?,
                 })
             }
             _ => Err(Error::new_spanned(
@@ -104,7 +104,7 @@ impl EnumValue {
             Some(path) => quote::quote! {
                 #path::#enum_ident
             },
-            None => enum_ident.to_token_stream()
+            None => enum_ident.to_token_stream(),
         };
 
         let to_token_arms: Vec<TokenStream> = self

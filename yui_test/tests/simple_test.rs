@@ -1,9 +1,9 @@
 #![feature(proc_macro_hygiene)]
+use float_cmp::approx_eq;
 use yui::get_attribute;
 use yui_test::SimpleDerive;
 use yui_test_attribute::attribute::Simple;
 use yui_test_attribute::enums::TestEnum;
-use float_cmp::approx_eq;
 
 #[derive(SimpleDerive)]
 #[Simple(i32 = 1, u16 = 2, float = 1.1, string = "test", enum2 = "aaa")]
