@@ -129,13 +129,9 @@ impl EnumValue {
 
             impl quote::ToTokens for #enum_ident {
                 fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-                    use quote::TokenStreamExt;
-                    tokens.append(proc_macro2::Group::new(
-                        proc_macro2::Delimiter::Brace,
-                        match self {
-                            #(#to_token_arms),*
-                        },
-                    ))
+                    match self {
+                        #(#to_token_arms),*
+                    }.to_tokens(tokens);
                  }
             }
         }

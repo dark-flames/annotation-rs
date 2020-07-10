@@ -79,12 +79,9 @@ impl Attribute {
                  fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
                     use quote::TokenStreamExt;
                     #(#to_token_temp_value;)*
-                    tokens.append(proc_macro2::Group::new(
-                        proc_macro2::Delimiter::Brace,
-                        quote::quote! {
-                            #to_token
-                        },
-                    ))
+                    (quote::quote! {
+                        #to_token
+                    }).to_tokens(tokens);
                  }
             }
         }
