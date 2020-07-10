@@ -116,7 +116,7 @@ impl Type {
         }
     }
 
-    pub fn get_nested_pattern(&self, named: bool, nested_ident: Ident) -> TokenStream {
+    pub fn get_nested_pattern(&self, named: bool, nested_ident: &Ident) -> TokenStream {
         match (self, named) {
             (Type::String, true) => quote::quote! {
                 syn::NestedMeta::Meta(
@@ -177,10 +177,10 @@ impl Type {
 
     pub fn get_lit_reader(
         &self,
-        nested_ident: Ident,
-        nested_lit: TokenStream,
-        path: TokenStream,
-        meta_list: Ident,
+        nested_ident: &Ident,
+        nested_lit: &TokenStream,
+        path: &TokenStream,
+        meta_list: &Ident,
     ) -> TokenStream {
         match self {
             Type::String => quote::quote! {
@@ -219,12 +219,13 @@ impl Type {
             Type::List(ty) => {
                 let result_type = ty.get_type_token_stream();
                 let list_nested_ident = format_ident! {"list_{}", nested_ident};
-                let pattern = ty.get_nested_pattern(false, list_nested_ident.clone());
+                let pattern = ty.get_nested_pattern(false, &list_nested_ident);
+                let list_nested_lit = quote::quote! {#list_nested_ident};
                 let reader = ty.get_lit_reader(
-                    list_nested_ident.clone(),
-                    quote::quote! {#list_nested_ident},
+                    &list_nested_ident,
+                    &list_nested_lit,
                     path,
-                    list_nested_ident,
+                    &list_nested_ident,
                 );
                 quote::quote! {
                     #nested_ident.nested.iter().map(|meta_nested_meta| {
@@ -241,12 +242,13 @@ impl Type {
             Type::Map(ty) => {
                 let result_type = ty.get_type_token_stream();
                 let map_nested_ident = format_ident! {"map_{}", nested_ident};
-                let pattern = ty.get_nested_pattern(true, map_nested_ident.clone());
+                let pattern = ty.get_nested_pattern(true, &map_nested_ident);
+                let map_nested_lit = quote::quote! { #map_nested_ident.lit };
                 let reader = ty.get_lit_reader(
-                    map_nested_ident.clone(),
-                    quote::quote! { #map_nested_ident.lit },
+                    &map_nested_ident,
+                    &map_nested_lit,
                     path,
-                    map_nested_ident.clone(),
+                    &map_nested_ident,
                 );
 
                 let path = match ty.as_ref() {

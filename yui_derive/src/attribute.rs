@@ -35,7 +35,7 @@ impl Attribute {
         let from_attributes_args = self
             .fields
             .parse_attributes_args_token_stream(format_ident!("input"), name.clone());
-        let from_meta = self.fields.parse_meta_token_stream(name.clone());
+        let from_meta = self.fields.parse_meta_token_stream(&self.ident);
         let path = self.path.clone();
         let to_token_temp_value = self.fields.get_to_token_temp_value_token_stream();
         let struct_path = match &self.mod_path {

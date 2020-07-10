@@ -127,12 +127,14 @@ impl ValuedField for NamedField {
         let nested_pattern = self
             .field_type
             .unwrap()
-            .get_nested_pattern(true, nested_ident.clone());
+            .get_nested_pattern(true, &nested_ident);
+        let nested_lit = quote::quote! { #nested_ident.lit };
+        let path = quote::quote! { String::from(#path_name) };
         let reader = self.field_type.unwrap().get_lit_reader(
-            nested_ident.clone(),
-            quote::quote! { #nested_ident.lit },
-            quote::quote! { String::from(#path_name) },
-            nested_ident.clone(),
+            &nested_ident,
+            &nested_lit,
+            &path,
+            &nested_ident,
         );
 
         let path_ident = self.field_type.unwrap().get_path_ident(nested_ident);
@@ -218,7 +220,7 @@ impl ValuedField for UnnamedFiled {
         let nested_pattern = self
             .field_type
             .unwrap()
-            .get_nested_pattern(false, nested_ident.clone());
+            .get_nested_pattern(false, &nested_ident);
         let index = self.index;
         let lit_name = format!(
             "{} field",
@@ -230,11 +232,13 @@ impl ValuedField for UnnamedFiled {
             },
         );
 
+        let nested_lit = quote::quote! { #nested_ident };
+        let path = quote::quote! { String::from(#lit_name) };
         let reader = self.field_type.unwrap().get_lit_reader(
-            nested_ident.clone(),
-            quote::quote! { #nested_ident },
-            quote::quote! { String::from(#lit_name) },
-            nested_ident,
+            &nested_ident,
+            &nested_lit,
+            &path,
+            &nested_ident,
         );
 
         quote::quote! {
@@ -346,7 +350,7 @@ impl Fields {
             _ => Vec::new(),
         };
 
-        let construct = self.construct_token_stream(name);
+        let construct = self.construct_token_stream(&name);
 
         let index_value = match self {
             Fields::UnnamedField(_) => quote::quote! {field_index},
@@ -379,7 +383,7 @@ impl Fields {
         }
     }
 
-    pub fn construct_token_stream(&self, name: Ident) -> TokenStream {
+    pub fn construct_token_stream(&self, name: &Ident) -> TokenStream {
         match self {
             Fields::NamedFields(named_fields) => {
                 let fields_token_stream: Vec<TokenStream> = named_fields
@@ -411,7 +415,7 @@ impl Fields {
         }
     }
 
-    pub fn parse_meta_token_stream(&self, name: Ident) -> TokenStream {
+    pub fn parse_meta_token_stream(&self, name: &Ident) -> TokenStream {
         match self {
             Fields::NamedFields(_) | Fields::UnnamedField(_) => {
                 quote::quote! {
@@ -432,7 +436,7 @@ impl Fields {
                 }
             }
             Fields::None => {
-                let construct = self.construct_token_stream(name);
+                let construct = self.construct_token_stream(&name);
                 quote::quote! {
                     #construct
                 }
