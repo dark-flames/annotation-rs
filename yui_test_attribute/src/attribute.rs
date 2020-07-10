@@ -4,9 +4,11 @@ use std::collections::HashMap;
 use yui::{YuiAttribute};
 
 #[derive(YuiAttribute, Clone)]
+#[mod_path="yui_test_attribute::attribute"]
 pub struct NoField;
 
 #[derive(YuiAttribute, Clone)]
+#[mod_path="yui_test_attribute::attribute"]
 pub struct Simple {
     #[attribute_field(alias = "i32")]
     pub int32: i32,
@@ -21,9 +23,11 @@ pub struct Simple {
 }
 
 #[derive(YuiAttribute, Clone)]
+#[mod_path="yui_test_attribute::attribute"]
 pub struct Tuple(pub Option<String>);
 
 #[derive(YuiAttribute, Clone)]
+#[mod_path="yui_test_attribute::attribute"]
 pub struct Full {
     pub object: Simple,
     pub vector: Vec<String>,

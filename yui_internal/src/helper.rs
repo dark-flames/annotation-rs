@@ -1,7 +1,9 @@
 use std::str::FromStr;
 use syn::export::fmt::Display;
 use syn::punctuated::Punctuated;
-use syn::{Error, GenericArgument, Lit, PathArguments, PathSegment, Type, TypePath};
+use syn::{Error, GenericArgument, Lit, PathArguments, PathSegment, Type, TypePath, Attribute, Meta};
+use proc_macro2::TokenStream;
+use crate::Symbol;
 
 #[inline]
 pub fn unwrap_punctuated_first<T, P>(
@@ -119,4 +121,33 @@ pub fn get_lit_bool<U: Display>(lit: &Lit, ident: &U) -> Result<bool, Error> {
             format!("expected {} lit to be a bool", ident),
         )),
     }
+}
+
+pub fn get_mod_path(attrs: &Vec<Attribute>) -> Result<Option<TokenStream>, Error>{
+    let mut mod_path = None;
+    for attr in attrs.iter() {
+        if attr.path == Symbol::new("mod_path") {
+            let meta = attr.parse_meta()?;
+            mod_path = match &meta {
+                Meta::NameValue(mod_path_value) => {
+                    let mod_path_str = get_lit_str(
+                        &mod_path_value.lit,
+                        mod_path_value.path.get_ident().as_ref().unwrap()
+                    )?;
+
+                    Some(
+                        TokenStream::from_str(mod_path_str.as_str()).map_err(
+                            |_| Error::new_spanned(
+                                &meta,
+                                "Invalid mod_path"
+                            )
+                        )?
+                    )
+                },
+                _ => None
+            }
+        }
+    }
+
+    Ok(mod_path)
 }

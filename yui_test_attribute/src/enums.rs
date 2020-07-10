@@ -4,6 +4,7 @@ use yui::YuiEnumValue;
 use std::str::FromStr;
 
 #[derive(YuiEnumValue, Debug, PartialEq, Clone)]
+#[mod_path = "yui_test_attribute::enums"]
 pub enum TestEnum {
     #[variant_value("aaa")]
     VariantA,

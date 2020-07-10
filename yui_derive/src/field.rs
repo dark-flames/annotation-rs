@@ -483,7 +483,7 @@ impl Fields {
         }
     }
 
-    pub fn get_to_token_token_stream(&self, name: Ident) -> TokenStream {
+    pub fn get_to_token_token_stream(&self, name: TokenStream) -> TokenStream {
         match self {
             Fields::None => quote::quote! {
                 #name

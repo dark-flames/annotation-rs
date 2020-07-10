@@ -3,11 +3,14 @@ use crate::field::Fields;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{Data, DeriveInput, Error, Ident};
+use yui_internal::get_mod_path;
+use syn::export::ToTokens;
 
 pub struct Attribute {
     ident: Ident,
     path: String,
     fields: Fields,
+    mod_path: Option<TokenStream>
 }
 
 impl Attribute {
@@ -20,6 +23,7 @@ impl Attribute {
                     ident: input.ident.clone(),
                     path,
                     fields: Fields::from_ast(&data_struct.fields)?,
+                    mod_path: get_mod_path(&input.attrs)?
                 })
             }
             _ => Err(Error::new_spanned(&input, "Attribute must be a struct")),
@@ -34,7 +38,13 @@ impl Attribute {
         let from_meta = self.fields.parse_meta_token_stream(name.clone());
         let path = self.path.clone();
         let to_token_temp_value = self.fields.get_to_token_temp_value_token_stream();
-        let to_token = self.fields.get_to_token_token_stream(name.clone());
+        let struct_path = match &self.mod_path {
+            Some(path) => quote::quote! {
+                #path::#name
+            },
+            None => name.to_token_stream()
+        };
+        let to_token = self.fields.get_to_token_token_stream(struct_path);
 
         quote! {
             impl yui::AttributeStructure for #name {

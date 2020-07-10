@@ -15,18 +15,19 @@ use enum_value::EnumValue;
 
 mod reader;
 
-#[proc_macro_derive(YuiEnumValue, attributes(variant_value))]
+#[proc_macro_derive(YuiEnumValue, attributes(variant_value, mod_path))]
 pub fn derive_enum_value(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     let enum_value = EnumValue::from_ast(&input);
+
     TokenStream::from(match enum_value {
         Ok(value) => value.get_implement(),
         Err(e) => e.to_compile_error(),
     })
 }
 
-#[proc_macro_derive(YuiAttribute, attributes(attribute, attribute_field))]
+#[proc_macro_derive(YuiAttribute, attributes(attribute_field, mod_path))]
 pub fn derive_attribute(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 

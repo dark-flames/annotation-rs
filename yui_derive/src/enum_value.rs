@@ -1,8 +1,8 @@
 use heck::SnakeCase;
 use proc_macro2::{Ident, TokenStream};
-use quote::quote;
+use quote::{quote, ToTokens};
 use syn::{Data, DeriveInput, Error, Meta, NestedMeta, Variant};
-use yui_internal::{get_lit_str, unwrap_punctuated_first, Symbol};
+use yui_internal::{get_lit_str, unwrap_punctuated_first, Symbol, get_mod_path};
 
 pub struct EnumItem {
     ident: Ident,
@@ -54,10 +54,10 @@ impl EnumItem {
         }
     }
 
-    pub fn to_token_pattern_arm(&self, enum_name: &Ident) -> TokenStream {
+    pub fn to_token_pattern_arm(&self, enum_name: &TokenStream, enum_ident: &Ident) -> TokenStream {
         let item_ident = &self.ident;
         quote! {
-            #enum_name::#item_ident => quote::quote!{#enum_name::#item_ident}
+            #enum_ident::#item_ident => quote::quote!{#enum_name::#item_ident}
         }
     }
 }
@@ -65,6 +65,7 @@ impl EnumItem {
 pub struct EnumValue {
     ident: Ident,
     items: Vec<EnumItem>,
+    mod_path: Option<TokenStream>
 }
 
 impl EnumValue {
@@ -80,6 +81,7 @@ impl EnumValue {
                 Ok(EnumValue {
                     ident: input.ident.clone(),
                     items: items?,
+                    mod_path: get_mod_path(&input.attrs)?
                 })
             }
             _ => Err(Error::new_spanned(
@@ -98,10 +100,17 @@ impl EnumValue {
             .map(|item| item.to_pattern_arm(&self.ident))
             .collect();
 
+        let enum_path = match &self.mod_path {
+            Some(path) => quote::quote! {
+                #path::#enum_ident
+            },
+            None => enum_ident.to_token_stream()
+        };
+
         let to_token_arms: Vec<TokenStream> = self
             .items
             .iter()
-            .map(|item| item.to_token_pattern_arm(&self.ident))
+            .map(|item| item.to_token_pattern_arm(&enum_path, &enum_ident))
             .collect();
         quote! {
             impl std::str::FromStr for #enum_ident {

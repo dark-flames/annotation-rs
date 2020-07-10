@@ -1,9 +1,10 @@
 #![feature(proc_macro_hygiene)]
 use yui::get_attribute;
 use yui_test::FullDerive;
-use yui_test_attribute::attribute::{Simple, Full, Tuple};
+use yui_test_attribute::attribute::Full;
 use yui_test_attribute::enums::TestEnum;
 use float_cmp::approx_eq;
+use quote::ToTokens;
 
 #[derive(FullDerive)]
 #[Full(
