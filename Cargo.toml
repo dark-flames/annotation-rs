@@ -10,8 +10,6 @@ include = [
     "src/**",
     "derive/**",
     "helpers/**",
-    "test_object/**",
-    "test_macro/**",
     "tests/**",
     "LICENSE-APACHE",
     "LICENSE-MIT",
@@ -27,8 +25,8 @@ helpers = { path = "./helpers", version = "0.1.0" }
 syn = "1.0"
 
 [dev-dependencies]
-test-object = { path = "./test_object", version = "0.1.0" }
-test-macro = { path = "./test_macro", version = "0.1.0" }
+objects = { path = "tests/objects", version = "0.1.0" }
+macros = { path = "tests/macros", version = "0.1.0" }
 float-cmp = "0.8.0"
 
 
@@ -39,6 +37,6 @@ annotation_reader=[]
 members = [
     "derive",
     "helpers",
-    "test_object",
-    "test_macro"
+    "tests/objects",
+    "tests/macros"
 ]

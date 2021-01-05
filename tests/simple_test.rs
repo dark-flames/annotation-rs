@@ -3,9 +3,9 @@
 use annotation_rs::get_annotation;
 
 use float_cmp::approx_eq;
-use test_macro::SimpleDerive;
-use test_object::attributes::Simple;
-use test_object::enums::TestEnum;
+use macros::SimpleDerive;
+use objects::attributes::Simple;
+use objects::enums::TestEnum;
 
 #[cfg(any(feature = "annotation_reader"))]
 #[derive(SimpleDerive)]

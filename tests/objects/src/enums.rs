@@ -4,7 +4,7 @@ use derive::AnnotationEnumValue;
 use std::str::FromStr;
 
 #[derive(AnnotationEnumValue, Debug, PartialEq, Clone)]
-#[mod_path = "test_object::enums"]
+#[mod_path = "objects::enums"]
 pub enum TestEnum {
     #[variant_value("aaa")]
     VariantA,

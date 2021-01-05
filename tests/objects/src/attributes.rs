@@ -4,11 +4,11 @@ use std::collections::HashMap;
 use derive::Annotation;
 
 #[derive(Annotation, Clone)]
-#[mod_path = "test_object::attributes"]
+#[mod_path = "objects::attributes"]
 pub struct NoField;
 
 #[derive(Annotation, Clone)]
-#[mod_path = "test_object::attributes"]
+#[mod_path = "objects::attributes"]
 pub struct Simple {
     #[field(alias = "i32")]
     pub int32: i32,
@@ -23,11 +23,11 @@ pub struct Simple {
 }
 
 #[derive(Annotation, Clone)]
-#[mod_path = "test_object::attributes"]
+#[mod_path = "objects::attributes"]
 pub struct Tuple(pub Option<String>);
 
 #[derive(Annotation, Clone)]
-#[mod_path = "test_object::attributes"]
+#[mod_path = "objects::attributes"]
 pub struct Full {
     pub object: Simple,
     pub vector: Vec<String>,
