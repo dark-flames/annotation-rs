@@ -6,20 +6,20 @@ use quote::{format_ident, quote};
 use syn::export::ToTokens;
 use syn::{Data, DeriveInput, Error, Ident};
 
-pub struct Attribute {
+pub struct Annotation {
     ident: Ident,
     path: String,
     fields: Fields,
     mod_path: Option<TokenStream>,
 }
 
-impl Attribute {
+impl Annotation {
     pub fn from_ast(input: &DeriveInput) -> Result<Self, Error> {
         match &input.data {
             Data::Struct(data_struct) => {
                 let path = input.ident.to_string();
 
-                Ok(Attribute {
+                Ok(Annotation {
                     ident: input.ident.clone(),
                     path,
                     fields: Fields::from_ast(&data_struct.fields)?,
@@ -47,7 +47,7 @@ impl Attribute {
         let to_token = self.fields.get_to_token_token_stream(struct_path);
 
         quote! {
-            impl annotation_rs::AttributeStructure for #name {
+            impl annotation_rs::AnnotationStructure for #name {
                 fn get_path() -> annotation_rs::Symbol {
                     annotation_rs::Symbol::new(#path)
                 }
@@ -70,7 +70,7 @@ impl Attribute {
             impl syn::parse_macro_input::ParseMacroInput for #name {
                 fn parse(input: syn::parse::ParseStream) -> Result<Self, syn::Error> {
                     let attribute_args = syn::AttributeArgs::parse(input)?;
-                    use annotation_rs::AttributeStructure;
+                    use annotation_rs::AnnotationStructure;
                     Self::from_attribute_args(attribute_args)
                 }
             }

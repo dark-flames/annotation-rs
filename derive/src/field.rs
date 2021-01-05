@@ -23,7 +23,7 @@ trait ValuedField {
             default: None,
         };
         for attr in attrs.iter() {
-            if attr.path == Symbol::new("attribute_field") {
+            if attr.path == Symbol::new("field") {
                 match &attr.parse_meta()? {
                     Meta::List(list) => {
                         for nested_item in &list.nested {
@@ -62,10 +62,7 @@ trait ValuedField {
                         }
                     }
                     _ => {
-                        return Err(Error::new_spanned(
-                            attr,
-                            "The meta of attribute_field must be a List",
-                        ));
+                        return Err(Error::new_spanned(attr, "The meta of field must be a List"));
                     }
                 }
             }

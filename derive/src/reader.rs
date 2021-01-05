@@ -46,16 +46,16 @@ impl ToTokens for InterpolatedList<'_> {
     }
 }
 
-type AttributeIdents = Punctuated<Ident, Token![,]>;
+type AnnotationIdents = Punctuated<Ident, Token![,]>;
 
-pub fn idents_to_vec(idents: &AttributeIdents) -> Vec<Ident> {
+pub fn idents_to_vec(idents: &AnnotationIdents) -> Vec<Ident> {
     idents.iter().cloned().collect()
 }
 
 pub struct ReaderConfig {
     pub name: Ident,
-    pub attr_idents: AttributeIdents,
-    pub field_attr_idents: AttributeIdents,
+    pub annotation_idents: AnnotationIdents,
+    pub field_attr_idents: AnnotationIdents,
 }
 
 #[inline]
@@ -75,24 +75,27 @@ impl Parse for ReaderConfig {
     fn parse<'a>(input: &'a ParseBuffer<'a>) -> Result<Self, Error> {
         let name = input.parse()?;
         input.parse::<Comma>()?;
-        let attr_idents = parse_punctuated_inside_bracket(&input)?;
+        let annotation_idents = parse_punctuated_inside_bracket(&input)?;
         let field_attr_idents = match input.parse::<Comma>() {
             Ok(_) => parse_punctuated_inside_bracket(&input)?,
             Err(_) => Punctuated::new(),
         };
         Ok(ReaderConfig {
             name,
-            attr_idents,
+            annotation_idents,
             field_attr_idents,
         })
     }
 }
 
 impl ReaderConfig {
-    fn get_attribute(&self) -> TokenStream {
+    fn get_annotation(&self) -> TokenStream {
         let name = self.name.clone();
-        let attributes_hash_set: HashSet<Ident> = [
-            self.attr_idents.iter().cloned().collect::<Vec<Ident>>(),
+        let annotation_hash_set: HashSet<Ident> = [
+            self.annotation_idents
+                .iter()
+                .cloned()
+                .collect::<Vec<Ident>>(),
             self.field_attr_idents
                 .iter()
                 .cloned()
@@ -103,38 +106,38 @@ impl ReaderConfig {
         .cloned()
         .collect();
 
-        let attributes: Vec<&Ident> = attributes_hash_set.iter().collect();
+        let annotation: Vec<&Ident> = annotation_hash_set.iter().collect();
 
         quote::quote! {
-            #[proc_macro_derive(#name, attributes(#(#attributes),*))]
+            #[proc_macro_derive(#name, attributes(#(#annotation),*))]
         }
     }
 
-    fn attributes_reader_token_stream(attribute_map: Vec<Ident>) -> TokenStream {
+    fn annotation_reader_token_stream(annotation_map: Vec<Ident>) -> TokenStream {
         let structure_interpolated = Interpolated::new("structure");
         let fn_name_interpolated = Interpolated("fn_name");
 
-        let attribute_matches: Vec<TokenStream> = attribute_map
+        let annotation_matches: Vec<TokenStream> = annotation_map
             .iter()
             .map(|ident| {
-                let attribute_name = ident.to_string();
-                let snake_case_attribute_name = attribute_name.to_snake_case();
+                let annotation_name = ident.to_string();
+                let snake_case_annotation_name = annotation_name.to_snake_case();
                 quote::quote! {
                     Ok(meta) if attr.path == #ident::get_path() => {
                         let fn_name = match &prefix {
                             Some(prefix_name) => quote::format_ident!(
                                 "__attr_{}_{}",
                                 prefix_name.as_str().to_lowercase(),
-                                #snake_case_attribute_name
+                                #snake_case_annotation_name
                             ),
                             None => quote::format_ident!(
                                 "__attr_{}",
-                                #snake_case_attribute_name
+                                #snake_case_annotation_name
                             )
                         };
                         match #ident::from_meta(&meta) {
                             Ok(structure) => {
-                                attribute_map.insert(#attribute_name);
+                                annotation_map.insert(#annotation_name);
                                 Some(Ok(quote::quote! {
                                     pub fn #fn_name_interpolated() -> #ident {#structure_interpolated}
                                 }))
@@ -145,13 +148,13 @@ impl ReaderConfig {
                 }
             }).collect();
         let count_interpolated = Interpolated::new("count");
-        let attributes_interpolated = InterpolatedList::new("attributes", Some(','));
-        let attribute_map_const_name_interpolated = Interpolated::new("attribute_map_const_name");
+        let annotations_interpolated = InterpolatedList::new("annotations", Some(','));
+        let annotation_map_const_name_interpolated = Interpolated::new("annotation_map_const_name");
         quote::quote! {
-            |prefix: Option<String>, attributes: &Vec<syn::Attribute>| -> Result<Vec<proc_macro2::TokenStream>, syn::Error> {
-                let mut attribute_map: std::collections::HashSet<&str> = std::collections::HashSet::new();
+            |prefix: Option<String>, annotations: &Vec<syn::Attribute>| -> Result<Vec<proc_macro2::TokenStream>, syn::Error> {
+                let mut annotation_map: std::collections::HashSet<&str> = std::collections::HashSet::new();
 
-                let attribute_map_const_name = match &prefix {
+                let annotation_map_const_name = match &prefix {
                     Some(prefix_name) => quote::format_ident!(
                         "{}_ATTRIBUTE_MAP",
                         prefix_name.to_uppercase()
@@ -161,12 +164,12 @@ impl ReaderConfig {
                     )
                 };
 
-                attributes.iter().map(
+                annotations.iter().map(
                     |attr| -> Option<Result<proc_macro2::TokenStream, syn::Error>> {
                         let meta = attr.parse_meta();
 
                         match &meta {
-                            #(#attribute_matches,)*
+                            #(#annotation_matches,)*
                             Err(e) => Some(Err(e.clone())),
                             _ => None
                         }
@@ -174,27 +177,27 @@ impl ReaderConfig {
                 )
                 .filter_map(|result| result)
                 .collect::<Result<Vec<proc_macro2::TokenStream>, syn::Error>>().map(
-                    |attribute_tokens| {
-                        let count = attribute_map.len();
-                        let attributes: Vec<_> = attribute_map.into_iter().collect();
+                    |annotation_tokens| {
+                        let count = annotation_map.len();
+                        let annotations: Vec<_> = annotation_map.into_iter().collect();
                         let tokens = vec![
                             quote::quote!{
-                                const #attribute_map_const_name_interpolated: [&'static str; #count_interpolated] = [#attributes_interpolated];
+                                const #annotation_map_const_name_interpolated: [&'static str; #count_interpolated] = [#annotations_interpolated];
                             }
                         ];
 
-                        [tokens, attribute_tokens].concat()
+                        [tokens, annotation_tokens].concat()
                     }
                 )
             }
         }
     }
 
-    fn read_field_attributes_token_stream(attribute_map: Vec<Ident>) -> TokenStream {
-        let attributes_reader = Self::attributes_reader_token_stream(attribute_map);
+    fn read_field_annotations_token_stream(annotation_map: Vec<Ident>) -> TokenStream {
+        let annotations_reader = Self::annotation_reader_token_stream(annotation_map);
         let tokens_interpolated = InterpolatedList::new("tokens", None);
         quote::quote! {
-            let reader = #attributes_reader;
+            let reader = #annotations_reader;
             match input.data {
                 syn::Data::Struct(data_struct) => {
                     data_struct.fields.iter().enumerate().map(
@@ -252,42 +255,42 @@ impl ReaderConfig {
     }
 
     pub fn get_reader(&self) -> TokenStream {
-        let attribute = self.get_attribute();
+        let annotation = self.get_annotation();
         let fn_name = format_ident!("derive_{}", self.name.to_string().to_snake_case());
-        let struct_attribute_reader =
-            Self::attributes_reader_token_stream(idents_to_vec(&self.attr_idents));
-        let field_attribute_reader =
-            Self::read_field_attributes_token_stream(idents_to_vec(&self.field_attr_idents));
+        let struct_annotation_reader =
+            Self::annotation_reader_token_stream(idents_to_vec(&self.annotation_idents));
+        let field_annotation_reader =
+            Self::read_field_annotations_token_stream(idents_to_vec(&self.field_attr_idents));
 
         let name_interpolated = Interpolated("name");
-        let struct_attribute_tokens_interpolated =
-            InterpolatedList::new("struct_attribute_tokens", None);
-        let field_attribute_tokens_interpolated =
-            InterpolatedList::new("field_attribute_tokens", None);
+        let struct_annotation_tokens_interpolated =
+            InterpolatedList::new("struct_annotation_tokens", None);
+        let field_annotation_tokens_interpolated =
+            InterpolatedList::new("field_annotation_tokens", None);
 
         quote::quote! {
-            #attribute
+            #annotation
             pub fn #fn_name(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-                use annotation_rs::AttributeStructure;
+                use annotation_rs::AnnotationStructure;
                 let input = syn::parse_macro_input!(input as syn::DeriveInput);
 
                 let name = input.ident;
 
-                let struct_attribute_reader = #struct_attribute_reader;
+                let struct_annotation_reader = #struct_annotation_reader;
 
-                let struct_attribute_tokens: Vec<proc_macro2::TokenStream> = match struct_attribute_reader(None, &input.attrs) {
+                let struct_annotation_tokens: Vec<proc_macro2::TokenStream> = match struct_annotation_reader(None, &input.attrs) {
                     Ok(tokens) => tokens,
                     Err(e) => return proc_macro::TokenStream::from(e.to_compile_error())
                 };
 
-                let field_attribute_tokens: Vec<proc_macro2::TokenStream> = {
-                    #field_attribute_reader
+                let field_annotation_tokens: Vec<proc_macro2::TokenStream> = {
+                    #field_annotation_reader
                 };
 
                 proc_macro::TokenStream::from(quote::quote! {
                     impl #name_interpolated {
-                        #struct_attribute_tokens_interpolated
-                        #field_attribute_tokens_interpolated
+                        #struct_annotation_tokens_interpolated
+                        #field_annotation_tokens_interpolated
                     }
                 })
             }
@@ -295,32 +298,32 @@ impl ReaderConfig {
     }
 }
 
-pub struct GetAttributeParam {
+pub struct GetAnnotationParam {
     class: Ident,
-    attribute: Ident,
+    annotation: Ident,
     property: Option<Ident>,
 }
 
-impl Parse for GetAttributeParam {
+impl Parse for GetAnnotationParam {
     fn parse<'a>(input: &'a ParseBuffer<'a>) -> Result<Self, Error> {
         let class = input.parse()?;
         input.parse::<Comma>()?;
-        let attribute = input.parse()?;
+        let annotation = input.parse()?;
         let property = match input.parse::<Comma>() {
             Ok(_) => input.parse()?,
             Err(_) => None,
         };
-        Ok(GetAttributeParam {
+        Ok(GetAnnotationParam {
             class,
-            attribute,
+            annotation,
             property,
         })
     }
 }
 
-impl GetAttributeParam {
-    pub fn get_attribute(&self) -> TokenStream {
-        let attr_str = self.attribute.to_string().to_snake_case();
+impl GetAnnotationParam {
+    pub fn get_annotation(&self) -> TokenStream {
+        let attr_str = self.annotation.to_string().to_snake_case();
         let fn_name = format_ident!(
             "__attr_{}",
             match &self.property {
@@ -332,7 +335,7 @@ impl GetAttributeParam {
             }
         );
         let class = &self.class;
-        let has_attr = self.has_attribute();
+        let has_attr = self.has_annotation();
         quote::quote! {
             match #has_attr {
                 true => Some(#class::#fn_name()),
@@ -341,7 +344,7 @@ impl GetAttributeParam {
         }
     }
 
-    pub fn has_attribute(&self) -> TokenStream {
+    pub fn has_annotation(&self) -> TokenStream {
         let const_name = format_ident!(
             "{}ATTRIBUTE_MAP",
             match &self.property {
@@ -352,7 +355,7 @@ impl GetAttributeParam {
                 None => format!(""),
             }
         );
-        let attr_str = self.attribute.to_string();
+        let attr_str = self.annotation.to_string();
         let class = &self.class;
         quote::quote! {
             #class::#const_name.contains(&#attr_str)

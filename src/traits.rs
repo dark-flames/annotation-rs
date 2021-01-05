@@ -2,7 +2,7 @@ use crate::Symbol;
 use syn::parse::{Parse, ParseBuffer};
 use syn::{AttributeArgs, DeriveInput, Error, Meta};
 
-pub trait AttributeStructure {
+pub trait AnnotationStructure {
     fn get_path() -> Symbol
     where
         Self: Sized;
@@ -16,11 +16,11 @@ pub trait AttributeStructure {
         Self: std::marker::Sized;
 }
 
-pub struct AttributeStructures<T: AttributeStructure> {
+pub struct AnnotationStructures<T: AnnotationStructure> {
     pub attrs: Vec<T>,
 }
 
-impl<T: AttributeStructure> AttributeStructures<T> {
+impl<T: AnnotationStructure> AnnotationStructures<T> {
     pub fn from_derive_input(derive_input: &DeriveInput) -> Result<Self, Error> {
         let attributes: Vec<T> = derive_input
             .attrs
@@ -31,11 +31,11 @@ impl<T: AttributeStructure> AttributeStructures<T> {
             })
             .collect::<Result<Vec<T>, Error>>()?;
 
-        Ok(AttributeStructures { attrs: attributes })
+        Ok(AnnotationStructures { attrs: attributes })
     }
 }
 
-impl<T: AttributeStructure> Parse for AttributeStructures<T> {
+impl<T: AnnotationStructure> Parse for AnnotationStructures<T> {
     fn parse(input: &ParseBuffer) -> Result<Self, Error> {
         let derive_input = DeriveInput::parse(&input)?;
         Self::from_derive_input(&derive_input)

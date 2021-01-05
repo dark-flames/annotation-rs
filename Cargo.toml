@@ -3,11 +3,22 @@ name = "annotation-rs"
 version = "0.1.0"
 authors = ["dark-flames <dark_flames@outlook.com>"]
 license = "MIT OR Apache-2.0"
-description = "An attribute reader generator for Rust"
-repository = "https://github.com/dark-flames/Yui"
-keywords = ["yui", "attribute-reader"]
-include = ["src/*.rs", "crates-io.md", "LICENSE-APACHE", "LICENSE-MIT"]
-readme = "crates-io.md"
+description = "Compile-time annotation parser for rust"
+repository = "https://github.com/dark-flames/annotation-rs"
+keywords = ["annotation"]
+include = [
+    "src/**",
+    "derive/**",
+    "helpers/**",
+    "test_object/**",
+    "test_macro/**",
+    "tests/**",
+    "LICENSE-APACHE",
+    "LICENSE-MIT",
+    "/Cargo.toml",
+    "/README.md",
+]
+readme = "README.md"
 edition = "2018"
 
 [dependencies]
@@ -22,7 +33,7 @@ float-cmp = "0.8.0"
 
 
 [features]
-generate-reader=[]
+annotation_reader=[]
 
 [workspace]
 members = [

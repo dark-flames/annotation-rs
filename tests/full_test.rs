@@ -1,13 +1,13 @@
 #![feature(proc_macro_hygiene)]
-#[cfg(any(feature = "generate-reader"))]
-use annotation_rs::get_attribute;
+#[cfg(any(feature = "annotation_reader"))]
+use annotation_rs::get_annotation;
 
 use float_cmp::approx_eq;
 use test_macro::FullDerive;
 use test_object::attributes::Full;
 use test_object::enums::TestEnum;
 
-#[cfg(any(feature = "generate-reader"))]
+#[cfg(any(feature = "annotation_reader"))]
 #[derive(FullDerive)]
 #[Full(
     object(i32 = 1, u16 = 2, float = 1.1, string = "test", enum2 = "aaa"),
@@ -18,10 +18,10 @@ use test_object::enums::TestEnum;
 )]
 struct Test;
 
-#[cfg(any(feature = "generate-reader"))]
+#[cfg(any(feature = "annotation_reader"))]
 #[test]
 pub fn test_full() {
-    let attr: Full = get_attribute!(Test, Full).unwrap();
+    let attr: Full = get_annotation!(Test, Full).unwrap();
     let simple = attr.object;
     assert_eq!(simple.int32, 1);
     assert_eq!(simple.unsigned16, 2);
