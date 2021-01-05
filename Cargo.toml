@@ -22,13 +22,13 @@ readme = "README.md"
 edition = "2018"
 
 [dependencies]
-derive = { path = "./derive" }
-helpers = { path = "./helpers" }
+derive = { path = "./derive", version = "0.1.0" }
+helpers = { path = "./helpers", version = "0.1.0" }
 syn = "1.0"
 
 [dev-dependencies]
-test-object = { path = "./test_object" }
-test-macro = { path = "./test_macro" }
+test-object = { path = "./test_object", version = "0.1.0" }
+test-macro = { path = "./test_macro", version = "0.1.0" }
 float-cmp = "0.8.0"
 
 
