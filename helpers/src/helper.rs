@@ -1,7 +1,7 @@
 use crate::Symbol;
 use proc_macro2::TokenStream;
+use std::fmt::Display;
 use std::str::FromStr;
-use syn::export::fmt::Display;
 use syn::punctuated::Punctuated;
 use syn::{
     Attribute, Error, GenericArgument, Lit, Meta, PathArguments, PathSegment, Type, TypePath,
