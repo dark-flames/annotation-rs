@@ -2,8 +2,7 @@ use crate::field::Fields;
 
 use helpers::get_mod_path;
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
-use syn::export::ToTokens;
+use quote::{format_ident, quote, ToTokens};
 use syn::{Data, DeriveInput, Error, Ident};
 
 pub struct Annotation {
