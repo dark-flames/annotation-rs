@@ -1,0 +1,10 @@
+[package]
+name = "helpers"
+version = "0.1.0"
+authors = ["dark-flames <dark_flames@outlook.com>"]
+edition = "2018"
+
+[dependencies]
+syn = "1.0"
+quote = "1.0"
+proc-macro2 = "1.0"

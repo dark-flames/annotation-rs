@@ -1,0 +1,21 @@
+[package]
+name = "derive"
+version = "0.1.0"
+authors = ["dark-flames <dark_flames@outlook.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+helpers = { path = "../helpers" }
+quote = "1.0"
+proc-macro2 = "1.0"
+heck = "0.3.1"
+
+
+[dependencies.syn]
+version = "1.0"
+features = ["fold", "full"]
+
+[lib]
+proc-macro = true

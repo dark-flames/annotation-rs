@@ -5,17 +5,17 @@ Yui is an attribute reader for Rust.
 ## Features
 
 ### Attribute structure
-Yui provides a derive macro `YuiAttribute` to create attribute structure by struct, `StructStruct`, `TupleStruct` and `NoFieldStruct` are all supported.
+Yui provides a derive macro `Annotation` to create attribute structure by struct, `StructStruct`, `TupleStruct` and `NoFieldStruct` are all supported.
 ```rust
-use yui::YuiAttribute;
+use yui::Annotation;
 
-#[derive(YuiAttribute)]
+#[derive(Annotation)]
 struct NoField;
 
-#[derive(YuiAttribute)]
+#[derive(Annotation)]
 struct Tuple(i32, String);
 
-#[derive(YuiAttribute)]
+#[derive(Annotation)]
 struct Struct {
     int: i32,
     float: f64,
@@ -35,18 +35,18 @@ struct Struct {
 If you want to make a field optional, use `Option<T>` on the field type.
 
 ```rust
-use yui::{YuiEnumValue, YuiAttribute};
+use yui::{AnnotationEnumValue, Annotation};
 
-#[derive(YuiAttribute)]
+#[derive(Annotation)]
 struct Bar;
 
-#[derive(YuiEnumValue)]
+#[derive(AnnotationEnumValue)]
 enum SomeEnum {
     A,
     B
 }
 
-#[derive(YuiAttribute)]
+#[derive(Annotation)]
 struct Foo {
     pub string: String,
     pub bool: bool,
@@ -64,7 +64,7 @@ struct Foo {
 * `alias`\
     Generated reader will parse the field with the given name instead of its field name in Rust.
     ```rust
-    #[derive(YuiAttribute)]
+    #[derive(Annotation)]
     struct Foo {
         #[attribute_field(alias = "i32")]
         pub int32: i32,
@@ -73,7 +73,7 @@ struct Foo {
 * `default`\
     Set the default value for this field. If the value is not present when parsing, the default value will be set to the field, even the field is optional.`Object`, `Vec` or `HashMap` fields can`t have default value.
     ```rust
-    #[derive(YuiAttribute)]
+    #[derive(Annotation)]
     struct Foo {
         #[attribute_field(default = 1024)]
         pub int32: i32
@@ -83,11 +83,11 @@ struct Foo {
     use `enum_value=true` on Enum type field.
         
 #### Enum
-Use derive `YuiEnumValue` on Enum to create a Enum value type.
+Use derive `AnnotationEnumValue` on Enum to create a Enum value type.
 ```rust
-use yui::YuiEnumValue;
+use yui::AnnotationEnumValue;
 
-#[derive(YuiEnumValue)]
+#[derive(AnnotationEnumValue)]
 enum SomeEnum {
     A,
     B
@@ -97,9 +97,9 @@ And then, the enum can be used as a field type.
 * `variant_value` attribute\
     Customize a string corresponding value to variant(default is the snake case of variant name in Rust).
 ```rust
-use yui::YuiEnumValue;
+use yui::AnnotationEnumValue;
 
-#[derive(YuiEnumValue)]
+#[derive(AnnotationEnumValue)]
 enum SomeEnum {
     #[variant_value("aaa")] // default is 'a'
     A,
@@ -116,7 +116,7 @@ And attribute structure with value can be convert to token automatically. But th
 ```rust
 use proc_macro::TokenStream;
 
-#[derive(YuiAttribute)]
+#[derive(Annotation)]
 struct Foo {
     #[attribute_field(default = 1024)]
     pub int32: i32
