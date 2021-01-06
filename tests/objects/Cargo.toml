@@ -1,9 +1,11 @@
 [package]
-name = "objects"
+name = "annotations-test-objects"
 version = "0.1.0"
 authors = ["dark-flames <dark_flames@outlook.com>"]
 license = "MIT OR Apache-2.0"
 edition = "2018"
+description = "test objects for annotation-rs"
+repository = "https://github.com/dark-flames/annotation-rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -11,5 +13,5 @@ edition = "2018"
 syn = "1.0"
 proc-macro2 = "1.0"
 quote = "1.0"
-derive = { path = "../../derive" }
+derive = { package = "annotation-rs-codegen", path = "../../derive" }
 annotation-rs = { path = "../../"}

@@ -1,8 +1,10 @@
 [package]
-name = "macros"
+name = "annotation-rs-test-macros"
 version = "0.1.0"
 authors = ["dark-flames <dark_flames@outlook.com>"]
 edition = "2018"
+description = "test macros for annotation-rs"
+repository = "https://github.com/dark-flames/annotation-rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -10,8 +12,8 @@ edition = "2018"
 syn = "1.0"
 proc-macro2 = "1.0"
 quote = "1.0"
-objects = { path = "../objects" }
-derive = { path = "../../derive" }
+objects = { package = "annotations-test-objects", path = "../objects" }
+derive = { package = "annotation-rs-codegen", path = "../../derive" }
 annotation-rs = { path = "../../"}
 
 [lib]
