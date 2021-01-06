@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: dtolnay/rust-toolchain@nightly
-      - run: cargo test --all-features
+      - run: cargo test --all-features --workspace
 
   clippy:
     name: Clippy
