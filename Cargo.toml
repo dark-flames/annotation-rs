@@ -7,12 +7,9 @@ description = "Compile-time annotation parser for rust"
 repository = "https://github.com/dark-flames/annotation-rs"
 keywords = ["annotation"]
 include = [
-    "src/**",
-    "derive/**",
-    "helpers/**",
-    "tests/**",
-    "LICENSE-APACHE",
-    "LICENSE-MIT",
+    "/src/**",
+    "/LICENSE-APACHE",
+    "/LICENSE-MIT",
     "/Cargo.toml",
     "/README.md",
 ]
@@ -23,11 +20,6 @@ edition = "2018"
 derive = { package = "annotation-rs-codegen", path = "./derive", version = "0.1.0" }
 helpers = { package = "annotation-rs-helpers", path = "./helpers", version = "0.1.0" }
 syn = "1.0"
-
-[dev-dependencies]
-objects = { package = "annotations-test-objects", path = "tests/objects", version = "0.1.0" }
-macros = { package = "annotation-rs-test-macros", path = "tests/macros", version = "0.1.0" }
-float-cmp = "0.8.0"
 
 
 [features]

@@ -3,8 +3,17 @@ name = "annotation-rs-helpers"
 version = "0.1.0"
 authors = ["dark-flames <dark_flames@outlook.com>"]
 edition = "2018"
+license = "MIT OR Apache-2.0"
 description = "internal helper lib for annotation-rs"
 repository = "https://github.com/dark-flames/annotation-rs"
+include = [
+    "/src/**",
+    "/LICENSE-APACHE",
+    "/LICENSE-MIT",
+    "/Cargo.toml",
+    "/README.md",
+]
+readme = "README.md"
 
 [dependencies]
 syn = "1.0"

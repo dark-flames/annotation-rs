@@ -1,18 +1,15 @@
 #![feature(proc_macro_hygiene)]
-#[cfg(any(feature = "annotation_reader"))]
 use annotation_rs::get_annotation;
 
+use annotation_rs_test_macros::SimpleDerive;
 use float_cmp::approx_eq;
-use macros::SimpleDerive;
 use objects::attributes::Simple;
 use objects::enums::TestEnum;
 
-#[cfg(any(feature = "annotation_reader"))]
 #[derive(SimpleDerive)]
 #[Simple(i32 = 1, u16 = 2, float = 1.1, string = "test", enum2 = "aaa")]
 struct Test;
 
-#[cfg(any(feature = "annotation_reader"))]
 #[test]
 pub fn simple_test() {
     let attr: Simple = get_annotation!(Test, Simple).unwrap();

@@ -1,13 +1,11 @@
 #![feature(proc_macro_hygiene)]
-#[cfg(any(feature = "annotation_reader"))]
 use annotation_rs::get_annotation;
 
+use annotation_rs_test_macros::FullDerive;
 use float_cmp::approx_eq;
-use macros::FullDerive;
 use objects::attributes::Full;
 use objects::enums::TestEnum;
 
-#[cfg(any(feature = "annotation_reader"))]
 #[derive(FullDerive)]
 #[Full(
     object(i32 = 1, u16 = 2, float = 1.1, string = "test", enum2 = "aaa"),
@@ -18,7 +16,6 @@ use objects::enums::TestEnum;
 )]
 struct Test;
 
-#[cfg(any(feature = "annotation_reader"))]
 #[test]
 pub fn test_full() {
     let attr: Full = get_annotation!(Test, Full).unwrap();
